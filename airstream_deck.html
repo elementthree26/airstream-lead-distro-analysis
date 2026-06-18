@@ -4,768 +4,328 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Airstream · Dealer Lead Distribution · Forecast vs. Actual</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
   :root {
     --navy:      #1C2B3A;
     --navy-mid:  #243447;
-    --navy-lt:   #2E4055;
     --silver:    #A8B4BC;
     --silver-lt: #D6DDE0;
     --gold:      #C09B5E;
-    --gold-lt:   #D4AF7A;
     --white:     #FFFFFF;
     --bg:        #F4F6F7;
     --mid:       #5C6E7A;
     --red:       #C0392B;
     --green:     #27AE60;
-    --slide-h:   100vh;
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow: hidden; height: 100%; }
+  body { font-family: "Inter","Segoe UI",system-ui,sans-serif; background: var(--navy); color: var(--white); }
 
-  html { overflow: hidden; }
-  body { overflow: hidden; }
+  /* Nav dots */
+  #nav { position: fixed; right: 1.2rem; top: 50%; transform: translateY(-50%); z-index: 100; display: flex; flex-direction: column; gap: 9px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.22); cursor: pointer; border: none; outline: none; }
+  .dot.on { background: var(--gold); }
 
-  body {
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    background: var(--navy);
-    color: var(--white);
-  }
+  /* Slide track */
+  #deck { position: fixed; inset: 0; overflow: hidden; }
+  #track { position: absolute; top: 0; left: 0; right: 0; }
 
-  /* ── Nav dots ─────────────────────────────────────────────── */
-  #nav {
-    position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%);
-    z-index: 100; display: flex; flex-direction: column; gap: 10px;
-  }
-  .nav-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: rgba(255,255,255,0.25); cursor: pointer;
-  
-    border: none; outline: none;
-  }
-  .nav-dot.active { background: var(--gold); transform: scale(1.4); }
-  .nav-dot:hover { background: var(--silver); }
+  .slide { height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; padding: 2.8rem 3.5rem 1.8rem; }
 
-  /* ── Progress bar ─────────────────────────────────────────── */
-  #progress {
-    position: fixed; top: 0; left: 0; height: 3px;
-    background: linear-gradient(90deg, var(--gold), var(--gold-lt));
-    width: 0%; z-index: 200;
-  }
+  /* Slide 1 */
+  #s1 { background: var(--navy); justify-content: center; }
+  #s1::before { content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--gold); }
+  .bg-word { position:absolute; right:-1rem; bottom:-1rem; font-size:22vw; font-weight:900; color:rgba(255,255,255,.03); pointer-events:none; white-space:nowrap; line-height:1; letter-spacing:-.05em; }
 
-  /* ── Slides ───────────────────────────────────────────────── */
-  #deck {
-    position: fixed; inset: 0;
-    overflow: hidden;
-  }
+  .eyebrow { font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:.6rem; font-weight:600; }
+  h1 { font-size:clamp(2rem,3.8vw,3rem); font-weight:800; line-height:1.1; margin-bottom:.4rem; }
+  .sub { font-size:1rem; color:var(--silver); margin-bottom:2rem; }
+  .divider { width:44px; height:3px; background:var(--gold); margin:.4rem 0 1.1rem; border-radius:2px; }
 
-  #slides-track {
-    position: absolute; top: 0; left: 0; right: 0;
-  
-  
-  }
+  .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:.9rem; margin-top:1.5rem; }
+  .kpi { background:var(--navy-mid); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:1.2rem .9rem; text-align:center; }
+  .kpi.gold { border-color:var(--gold); }
+  .kpi.red  { border-color:var(--red); }
+  .kv { font-size:clamp(1.5rem,2.8vw,2.2rem); font-weight:800; display:block; }
+  .kv.red { color:var(--red); }
+  .kl { font-size:.72rem; color:var(--silver); margin-top:.35rem; line-height:1.4; }
+  .kd { font-size:.75rem; font-weight:700; margin-top:.3rem; color:var(--red); }
 
-  .slide {
-    height: 100vh;
-    display: flex; flex-direction: column;
-    position: relative; overflow: hidden;
-    padding: 3.5rem 4rem 2.5rem;
-  }
+  .meta { display:flex; gap:2rem; flex-wrap:wrap; margin-top:1.8rem; border-top:1px solid rgba(255,255,255,.08); padding-top:1.3rem; }
+  .mk { font-size:.65rem; color:var(--gold); text-transform:uppercase; letter-spacing:.12em; font-weight:700; }
+  .mv { font-size:.85rem; color:var(--silver-lt); }
 
-  /* ── Slide 1 — Title ──────────────────────────────────────── */
-  #slide-1 {
-    background: var(--navy);
-    justify-content: center;
-  }
-  #slide-1::before {
-    content: '';
-    position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
-    background: var(--gold);
-  }
-  #slide-1 .bg-text {
-    position: absolute; right: -2rem; bottom: -1rem;
-    font-size: 22vw; font-weight: 900; color: rgba(255,255,255,0.03);
-    letter-spacing: -0.05em; pointer-events: none; white-space: nowrap;
-    line-height: 1;
-  }
+  /* Slide 2 */
+  #s2 { background:var(--bg); color:var(--navy); }
+  #s2 .eyebrow { color:var(--gold); }
+  #s2 h2 { color:var(--navy); font-size:clamp(1.4rem,2.5vw,2rem); font-weight:800; margin-bottom:.3rem; }
+  #s2 .sub { color:var(--mid); font-size:.85rem; }
 
-  .slide-label {
-    font-size: .75rem; letter-spacing: .2em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: .75rem; font-weight: 600;
-  }
-  .slide-title {
-    font-size: clamp(2rem, 4vw, 3.2rem);
-    font-weight: 800; line-height: 1.1;
-    color: var(--white); margin-bottom: .5rem;
-  }
-  .slide-subtitle {
-    font-size: 1.1rem; color: var(--silver); margin-bottom: 2.5rem; font-weight: 400;
-  }
+  .grid-1-3 { display:grid; grid-template-rows:1fr; gap:1rem; flex:1; }
+  .trend-row { display:grid; grid-template-columns:1fr; }
+  .small-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; }
 
-  .kpi-row {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
-    margin-top: 2rem;
-  }
-  .kpi-box {
-    background: var(--navy-mid);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px; padding: 1.4rem 1rem;
-    text-align: center;
-    
-  }
-  .kpi-box.gold-border { border-color: var(--gold); }
-  .kpi-box.red-border  { border-color: var(--red); }
-  .kpi-val {
-    font-size: clamp(1.6rem, 3vw, 2.4rem);
-    font-weight: 800; color: var(--white); display: block;
-  }
-  .kpi-label { font-size: .75rem; color: var(--silver); margin-top: .4rem; line-height: 1.4; }
-  .kpi-delta { font-size: .8rem; font-weight: 700; margin-top: .4rem; }
-  .kpi-delta.neg { color: var(--red); }
-  .kpi-delta.pos { color: var(--green); }
+  /* Slide 3 */
+  #s3 { background:var(--navy); }
+  #s3 h2 { font-size:clamp(1.4rem,2.5vw,2rem); font-weight:800; margin-bottom:.3rem; }
+  #s3 .sub { color:var(--silver); font-size:.85rem; }
 
-  .meta-row {
-    display: flex; gap: 2.5rem; flex-wrap: wrap; margin-top: 2rem;
-    border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;
-  }
-  .meta-item { display: flex; flex-direction: column; gap: .2rem; }
-  .meta-key { font-size: .7rem; color: var(--gold); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
-  .meta-val { font-size: .9rem; color: var(--silver-lt); }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .full { grid-column:1/-1; }
 
-  .e3-badge {
-    position: absolute; bottom: 1.5rem; right: 4rem;
-    font-size: .7rem; color: var(--mid); letter-spacing: .08em;
-  }
+  /* Slide 4 */
+  #s4 { background:var(--bg); color:var(--navy); }
+  #s4 h2 { color:var(--navy); font-size:clamp(1.4rem,2.5vw,2rem); font-weight:800; margin-bottom:.3rem; }
+  #s4 .sub { color:var(--mid); font-size:.85rem; }
+  #s4 .eyebrow { color:var(--gold); }
 
-  /* ── Slide 2 — Baseline ───────────────────────────────────── */
-  #slide-2 { background: var(--bg); color: var(--navy); }
-  #slide-2 .slide-label { color: var(--gold); }
-  #slide-2 .slide-title { color: var(--navy); }
-  #slide-2 .slide-subtitle { color: var(--mid); }
-  #slide-2 .e3-badge { color: var(--silver); }
+  /* Cards */
+  .card { background:var(--white); border-radius:10px; padding:1rem 1.2rem; box-shadow:0 1px 6px rgba(0,0,0,.06); display:flex; flex-direction:column; overflow:hidden; }
+  .card.dark { background:var(--navy-mid); border:1px solid rgba(255,255,255,.07); box-shadow:none; }
+  .ct { font-size:.7rem; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:.1em; margin-bottom:.5rem; flex-shrink:0; }
+  .card.dark .ct { color:var(--silver-lt); }
+  .cs { font-size:.65rem; color:var(--mid); margin-bottom:.5rem; flex-shrink:0; }
+  .card.dark .cs { color:var(--mid); }
+  .chart-wrap { flex:1; min-height:0; display:flex; flex-direction:column; }
 
-  .chart-grid {
-    display: grid; gap: 1.5rem; flex: 1;
-  }
-  .chart-grid-1-2 { grid-template-rows: 1.6fr 1fr; }
-  .chart-grid-3col { grid-template-columns: 1fr 1fr 1fr; }
+  /* Legend helper */
+  .leg { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; flex-shrink:0; }
+  .leg span { font-size:8px; color:var(--mid); display:flex; align-items:center; gap:3px; }
+  .leg-dot { display:inline-block; width:8px; height:8px; border-radius:1px; flex-shrink:0; }
 
-  .chart-card {
-    background: var(--white);
-    border-radius: 12px; padding: 1.25rem 1.5rem;
-    box-shadow: 0 2px 12px rgba(0,0,0,.06);
-    display: flex; flex-direction: column;
-    
-  }
-  .chart-card canvas { flex: 1; }
+  /* Table */
+  table { width:100%; border-collapse:collapse; font-size:.78rem; }
+  th { padding:.4rem .6rem; text-align:left; font-size:.63rem; text-transform:uppercase; letter-spacing:.09em; color:var(--silver); border-bottom:1px solid rgba(255,255,255,.12); }
+  th:not(:first-child) { text-align:right; }
+  td { padding:.4rem .6rem; border-bottom:1px solid rgba(255,255,255,.05); color:var(--silver-lt); }
+  td:not(:first-child) { text-align:right; }
+  td:first-child { color:var(--white); font-weight:600; }
+  .neg { color:var(--red)!important; font-weight:700; }
+  .pos { color:var(--green)!important; font-weight:700; }
+  tr:hover td { background:rgba(255,255,255,.03); }
 
-  .card-title {
-    font-size: .78rem; font-weight: 700; color: var(--navy);
-    text-transform: uppercase; letter-spacing: .1em; margin-bottom: .75rem;
-  }
-  .card-subtitle { font-size: .7rem; color: var(--mid); margin-top: -.4rem; margin-bottom: .75rem; }
+  /* Diag cards */
+  .diag-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; margin-top:1rem; }
+  .diag { border-radius:8px; padding:1rem 1.1rem; }
+  .diag.warn { background:#FDF0EE; border-left:3px solid var(--red); }
+  .diag.ok   { background:#EDF7F1; border-left:3px solid var(--green); }
+  .diag.info { background:var(--white); border-left:3px solid var(--silver); box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  .dh { font-size:.78rem; font-weight:700; color:var(--navy); margin-bottom:.3rem; }
+  .db { font-size:.72rem; color:var(--mid); line-height:1.5; }
 
-  /* ── Slide 3 — Forecast vs Actual ────────────────────────── */
-  #slide-3 { background: var(--navy); }
+  .bottom-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-top:1rem; }
 
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
-  .full-row { grid-column: 1 / -1; }
+  .badge { position:absolute; bottom:1.2rem; right:3.5rem; font-size:.65rem; color:var(--mid); }
 
-  .comparison-table {
-    width: 100%; border-collapse: collapse; font-size: .82rem;
-  }
-  .comparison-table th {
-    padding: .55rem .75rem; text-align: left;
-    font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
-    color: var(--silver); border-bottom: 1px solid rgba(255,255,255,.12);
-  }
-  .comparison-table th:not(:first-child) { text-align: right; }
-  .comparison-table td {
-    padding: .55rem .75rem; border-bottom: 1px solid rgba(255,255,255,.05);
-    color: var(--silver-lt);
-  }
-  .comparison-table td:not(:first-child) { text-align: right; }
-  .comparison-table td:first-child { color: var(--white); font-weight: 600; }
-  .comparison-table .actual-cell { font-weight: 700; }
-  .comparison-table .actual-cell.neg { color: var(--red); }
-  .comparison-table .actual-cell.pos { color: var(--green); }
-  .comparison-table tr:hover td { background: rgba(255,255,255,.03); }
+  /* Slide counter */
+  .hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.4rem; flex-shrink:0; }
+  .brand { font-size:.9rem; font-weight:900; letter-spacing:.18em; text-transform:uppercase; }
+  #s2 .brand, #s4 .brand { color:var(--navy); }
+  .ctr { font-size:.65rem; color:var(--mid); letter-spacing:.1em; }
 
-  /* ── Slide 4 — Quality & Diagnostics ─────────────────────── */
-  #slide-4 { background: var(--bg); color: var(--navy); }
-  #slide-4 .slide-label { color: var(--gold); }
-  #slide-4 .slide-title { color: var(--navy); }
-  #slide-4 .slide-subtitle { color: var(--mid); }
-
-  .diag-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;
-  }
-  .diag-card {
-    border-radius: 10px; padding: 1.2rem 1.4rem;
-    
-  }
-  .diag-card.warn { background: #FDF0EE; border-left: 4px solid var(--red); }
-  .diag-card.ok   { background: #EDF7F1; border-left: 4px solid var(--green); }
-  .diag-card.info { background: var(--white); border-left: 4px solid var(--silver); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
-  .diag-icon { font-size: 1.1rem; margin-bottom: .4rem; }
-  .diag-head { font-size: .82rem; font-weight: 700; color: var(--navy); margin-bottom: .35rem; }
-  .diag-body { font-size: .75rem; color: var(--mid); line-height: 1.5; }
-
-  .bottom-charts {
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; margin-top: 1.25rem;
-  }
-
-  /* ── Animations ───────────────────────────────────────────── */
-
-  /* ── Scrollbar ────────────────────────────────────────────── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--navy); }
-  ::-webkit-scrollbar-thumb { background: var(--mid); border-radius: 3px; }
-
-  /* ── Header bar ───────────────────────────────────────────── */
-  .slide-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.75rem;
-  }
-  .airstream-wordmark {
-    font-size: 1rem; font-weight: 900; letter-spacing: .18em;
-    text-transform: uppercase; color: var(--white);
-  }
-  #slide-2 .airstream-wordmark, #slide-4 .airstream-wordmark { color: var(--navy); }
-  .slide-counter { font-size: .72rem; color: var(--mid); letter-spacing: .1em; }
-
-  .divider {
-    width: 48px; height: 3px; background: var(--gold);
-    margin: .6rem 0 1.25rem; border-radius: 2px;
-  }
-
-  /* dark card variant for slide 3 */
-  .chart-card.dark {
-    background: var(--navy-mid);
-    border: 1px solid rgba(255,255,255,.07);
-    box-shadow: none;
-  }
-  .chart-card.dark .card-title { color: var(--silver-lt); }
-  .chart-card.dark .card-subtitle { color: var(--mid); }
+  ::-webkit-scrollbar { display:none; }
 </style>
 </head>
 <body>
 
-<div id="progress"></div>
 <nav id="nav">
-  <button class="nav-dot active" onclick="goTo(0)" title="Title"></button>
-  <button class="nav-dot" onclick="goTo(1)" title="Baseline"></button>
-  <button class="nav-dot" onclick="goTo(2)" title="Forecast vs Actual"></button>
-  <button class="nav-dot" onclick="goTo(3)" title="Quality & Diagnostics"></button>
+  <button class="dot on" onclick="go(0)"></button>
+  <button class="dot"    onclick="go(1)"></button>
+  <button class="dot"    onclick="go(2)"></button>
+  <button class="dot"    onclick="go(3)"></button>
 </nav>
 
-<div id="deck"><div id="slides-track">
-<!-- ════════════════════════════════════════════════════════════ SLIDE 1 -->
-<section class="slide" id="slide-1">
-  <div class="bg-text">AIRSTREAM</div>
+<div id="deck"><div id="track">
 
-  <div class="slide-header">
-    <span class="airstream-wordmark">Airstream</span>
-    <span class="slide-counter">01 / 04</span>
-  </div>
-
-  <div class="slide-label">Dealer Lead Distribution</div>
-  <h1 class="slide-title">Forecast vs. Actual<br>Post-Launch Analysis</h1>
+<!-- ══ SLIDE 1 ══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="bg-word">AIRSTREAM</div>
+  <div class="hdr"><span class="brand">Airstream</span><span class="ctr">01 / 04</span></div>
+  <div class="eyebrow">Dealer Lead Distribution</div>
+  <h1>Forecast vs. Actual<br>Post-Launch Analysis</h1>
   <div class="divider"></div>
-  <p class="slide-subtitle">
-    How did the new Airstream website change dealer lead volume?<br>
-    Pre-launch forecast · May 27, 2026 launch · 22 days of post-launch data
-  </p>
+  <p class="sub">How did the new Airstream website change dealer lead volume?<br>
+  Pre-launch forecast · May 27, 2026 launch · 22 days of post-launch data</p>
 
   <div class="kpi-row">
-    <div class="kpi-box gold-border">
-      <span class="kpi-val" data-count="249981" data-format="comma">0</span>
-      <div class="kpi-label">Historical Leads<br>(13-mo baseline)</div>
-    </div>
-    <div class="kpi-box">
-      <span class="kpi-val">~19,200</span>
-      <div class="kpi-label">Avg Leads / Month<br>(pre-launch baseline)</div>
-    </div>
-    <div class="kpi-box">
-      <span class="kpi-val">~17,900</span>
-      <div class="kpi-label">Forecasted Monthly<br>Volume (–7%)</div>
-    </div>
-    <div class="kpi-box red-border">
-      <span class="kpi-val" style="color:var(--red)">~12,026</span>
-      <div class="kpi-label">June 2026 Pace<br>(18 days of data)</div>
-      <div class="kpi-delta neg">–37% vs. baseline</div>
-    </div>
+    <div class="kpi gold"><span class="kv">249,981</span><div class="kl">Historical Leads<br>(13-mo baseline)</div></div>
+    <div class="kpi"><span class="kv">~19,200</span><div class="kl">Avg Leads / Month<br>(pre-launch baseline)</div></div>
+    <div class="kpi"><span class="kv">~17,900</span><div class="kl">Forecasted Monthly<br>Volume (–7%)</div></div>
+    <div class="kpi red"><span class="kv red">~12,026</span><div class="kl">June 2026 Pace<br>(18 days of data)</div><div class="kd">–37% vs. baseline</div></div>
   </div>
 
-  <div class="meta-row">
-    <div class="meta-item">
-      <span class="meta-key">Website Launch</span>
-      <span class="meta-val">May 27, 2026</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-key">Post-Launch Window</span>
-      <span class="meta-val">May 28 – June 18, 2026</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-key">Baseline Window</span>
-      <span class="meta-val">Mar 2025 – Mar 2026</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-key">Dealers</span>
-      <span class="meta-val">83</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-key">Pipeline</span>
-      <span class="meta-val">HubSpot → Make → AIMBase → Dealers</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-key">Prepared by</span>
-      <span class="meta-val">Element Three · June 2026</span>
-    </div>
+  <div class="meta">
+    <div><div class="mk">Website Launch</div><div class="mv">May 27, 2026</div></div>
+    <div><div class="mk">Post-Launch Window</div><div class="mv">May 28 – June 18, 2026</div></div>
+    <div><div class="mk">Baseline Window</div><div class="mv">Mar 2025 – Mar 2026</div></div>
+    <div><div class="mk">Dealers</div><div class="mv">83</div></div>
+    <div><div class="mk">Pipeline</div><div class="mv">HubSpot → Make → AIMBase → Dealers</div></div>
+    <div><div class="mk">Prepared by</div><div class="mv">Element Three · June 2026</div></div>
   </div>
-
-  <span class="e3-badge">Element Three · Confidential</span>
+  <span class="badge">Element Three · Confidential</span>
 </section>
 
-<!-- ════════════════════════════════════════════════════════════ SLIDE 2 -->
-<section class="slide" id="slide-2">
-  <div class="slide-header">
-    <span class="airstream-wordmark">Airstream</span>
-    <span class="slide-counter" style="color:var(--mid)">02 / 04</span>
-  </div>
-  <div class="slide-label">Pre-Launch Baseline</div>
-  <h2 class="slide-title">The "Before" Numbers</h2>
+<!-- ══ SLIDE 2 ══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="hdr"><span class="brand">Airstream</span><span class="ctr">02 / 04</span></div>
+  <div class="eyebrow">Pre-Launch Baseline</div>
+  <h2>The "Before" Numbers</h2>
   <div class="divider"></div>
-  <p class="slide-subtitle">Mar 2025 – Mar 2026 · 11 months of AIMBase data · 83 dealers</p>
+  <p class="sub">Mar 2025 – Mar 2026 · AIMBase data · 83 dealers</p>
 
-  <div class="chart-grid chart-grid-1-2" style="flex:1">
+  <div style="flex:1;display:grid;grid-template-rows:1.55fr 1fr;gap:1rem;min-height:0">
     <!-- Monthly trend -->
-    <div class="chart-card" id="card-monthly">
-      <div class="card-title">Monthly Lead Volume — Pre-Launch</div>
-      <div class="card-subtitle">Seasonality: June peak vs. winter trough</div>
-      <canvas id="chartMonthly" height="110"></canvas>
+    <div class="card">
+      <div class="ct">Monthly Lead Volume — Pre-Launch</div>
+      <div class="cs">Gold bar = Jun 2025 peak · Dashed = ~19,200 baseline avg</div>
+      <div class="chart-wrap"><svg viewBox="0 0 780 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="780" height="210" fill="#FFFFFF"/><line x1="46" y1="170.0" x2="764" y2="170.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="174.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="131.5" x2="764" y2="131.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="135.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">8k</text><line x1="46" y1="93.0" x2="764" y2="93.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="97.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">17k</text><line x1="46" y1="54.5" x2="764" y2="54.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="58.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">26k</text><line x1="46" y1="16.0" x2="764" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">35k</text><line x1="46" y1="86.8" x2="764" y2="86.8" stroke="#A8B4BC" stroke-width="1.2" stroke-dasharray="4 3"/><text x="762" y="83.8" font-size="8" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">Baseline ~19,200</text><rect x="58.4" y="89.6" width="30.4" height="80.4" fill="#1C2B3A" rx="2"/><text x="73.6" y="86.6" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">18k</text><text x="73.6" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Mar</text><text x="73.6" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="113.7" y="99.9" width="30.4" height="70.1" fill="#1C2B3A" rx="2"/><text x="128.8" y="96.9" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">16k</text><text x="128.8" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Apr</text><text x="128.8" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="168.9" y="82.2" width="30.4" height="87.8" fill="#1C2B3A" rx="2"/><text x="184.1" y="79.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">20k</text><text x="184.1" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">May</text><text x="184.1" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="224.1" y="45.7" width="30.4" height="124.3" fill="#C09B5E" rx="2"/><text x="239.3" y="42.7" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">28k</text><text x="239.3" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Jun</text><text x="239.3" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="279.4" y="67.9" width="30.4" height="102.1" fill="#1C2B3A" rx="2"/><text x="294.5" y="64.9" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">23k</text><text x="294.5" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Jul</text><text x="294.5" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="334.6" y="87.0" width="30.4" height="83.0" fill="#1C2B3A" rx="2"/><text x="349.8" y="84.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">19k</text><text x="349.8" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Aug</text><text x="349.8" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="389.8" y="99.4" width="30.4" height="70.6" fill="#1C2B3A" rx="2"/><text x="405.0" y="96.4" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">16k</text><text x="405.0" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Sep</text><text x="405.0" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="445.0" y="109.8" width="30.4" height="60.2" fill="#1C2B3A" rx="2"/><text x="460.2" y="106.8" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">13k</text><text x="460.2" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Oct</text><text x="460.2" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="500.3" y="117.6" width="30.4" height="52.4" fill="#1C2B3A" rx="2"/><text x="515.5" y="114.6" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">12k</text><text x="515.5" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Nov</text><text x="515.5" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="555.5" y="95.2" width="30.4" height="74.8" fill="#1C2B3A" rx="2"/><text x="570.7" y="92.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">17k</text><text x="570.7" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Dec</text><text x="570.7" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="610.7" y="32.5" width="30.4" height="137.5" fill="#1C2B3A" rx="2"/><text x="625.9" y="29.5" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">31k</text><text x="625.9" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Mar</text><text x="625.9" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><rect x="666.0" y="49.2" width="30.4" height="120.8" fill="#1C2B3A" rx="2"/><text x="681.2" y="46.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">27k</text><text x="681.2" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Apr</text><text x="681.2" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><rect x="721.2" y="61.5" width="30.4" height="108.5" fill="#1C2B3A" rx="2"/><text x="736.4" y="58.5" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">25k</text><text x="736.4" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">May</text><text x="736.4" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><line x1="46" y1="170" x2="764" y2="170" stroke="#D6DDE0" stroke-width="1"/></svg></div>
     </div>
-    <!-- Bottom row -->
-    <div class="chart-grid-3col" style="display:grid;gap:1.5rem">
-      <div class="chart-card" id="card-source">
-        <div class="card-title">Source Mix</div>
-        <canvas id="chartSource" height="140"></canvas>
+    <!-- Bottom 3 -->
+    <div style="display:grid;grid-template-columns:2fr 1.4fr 1.1fr;gap:1rem">
+      <div class="card">
+        <div class="ct">Source Mix (Baseline)</div>
+        <div class="chart-wrap" style="flex-direction:row;align-items:center;gap:1rem">
+          <div style="flex:0 0 170px;height:100%"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="200" height="200" fill="#FFFFFF"/><path d="M 100.00 25.00 A 75 75 0 1 1 66.13 166.92 L 78.32 142.83 A 48 48 0 1 0 100.00 52.00 Z" fill="#C09B5E" stroke="#FFFFFF" stroke-width="1.5"/><text x="159.8" y="117.3" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">57%</text><path d="M 66.13 166.92 A 75 75 0 0 1 26.49 85.12 L 52.95 90.48 A 48 48 0 0 0 78.32 142.83 Z" fill="#1C2B3A" stroke="#FFFFFF" stroke-width="1.5"/><text x="44.7" y="129.8" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">21%</text><path d="M 26.49 85.12 A 75 75 0 0 1 50.36 43.78 L 68.23 64.02 A 48 48 0 0 0 52.95 90.48 Z" fill="#5C6E7A" stroke="#FFFFFF" stroke-width="1.5"/><text x="46.7" y="72.2" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">10%</text><path d="M 50.36 43.78 A 75 75 0 0 1 73.24 29.94 L 82.88 55.16 A 48 48 0 0 0 68.23 64.02 Z" fill="#A8B4BC" stroke="#FFFFFF" stroke-width="1.5"/><path d="M 73.24 29.94 A 75 75 0 0 1 86.86 26.16 L 91.59 52.74 A 48 48 0 0 0 82.88 55.16 Z" fill="#7F8C8D" stroke="#FFFFFF" stroke-width="1.5"/><path d="M 86.86 26.16 A 75 75 0 0 1 100.00 25.00 L 100.00 52.00 A 48 48 0 0 0 91.59 52.74 Z" fill="#D6DDE0" stroke="#FFFFFF" stroke-width="1.5"/></svg><div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;justify-content:center"><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#C09B5E;border-radius:1px;flex-shrink:0"></span>Ext. Paid (Meta)</span><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#1C2B3A;border-radius:1px;flex-shrink:0"></span>Direct</span><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#5C6E7A;border-radius:1px;flex-shrink:0"></span>Organic</span><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#A8B4BC;border-radius:1px;flex-shrink:0"></span>Email</span><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#7F8C8D;border-radius:1px;flex-shrink:0"></span>Paid Search</span><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#D6DDE0;border-radius:1px;flex-shrink:0"></span>Other</span></div></div>
+          <div style="font-size:.72rem;color:var(--mid);line-height:1.8">
+            <div><b style="color:var(--navy)">~60%</b> External Paid (Meta)</div>
+            <div><b style="color:var(--navy)">~40%</b> Website-Captured</div>
+            <div style="margin-top:.4rem;font-size:.66rem">Meta leads are unaffected by<br>the website change</div>
+          </div>
+        </div>
       </div>
-      <div class="chart-card" id="card-score">
-        <div class="card-title">Score Distribution</div>
-        <canvas id="chartScore" height="140"></canvas>
+      <div class="card">
+        <div class="ct">Score Distribution</div>
+        <div class="chart-wrap"><svg viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="260" height="180" fill="#FFFFFF"/><line x1="46" y1="140.0" x2="244" y2="140.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="144.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="109.0" x2="244" y2="109.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="113.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">25%</text><line x1="46" y1="78.0" x2="244" y2="78.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="82.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">50%</text><line x1="46" y1="47.0" x2="244" y2="47.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="51.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">75%</text><line x1="46" y1="16.0" x2="244" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">100%</text><rect x="54.1" y="32.7" width="10.9" height="107.3" fill="#1C2B3A" rx="2"/><rect x="66.6" y="37.7" width="10.9" height="102.3" fill="#C09B5E" rx="2"/><text x="65.8" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 1</text><rect x="93.7" y="121.6" width="10.9" height="18.4" fill="#1C2B3A" rx="2"/><rect x="106.2" y="117.4" width="10.9" height="22.6" fill="#C09B5E" rx="2"/><text x="105.4" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 2</text><rect x="133.3" y="133.2" width="10.9" height="6.8" fill="#1C2B3A" rx="2"/><rect x="145.8" y="134.0" width="10.9" height="6.0" fill="#C09B5E" rx="2"/><text x="145.0" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 3</text><rect x="172.9" y="138.1" width="10.9" height="1.9" fill="#1C2B3A" rx="2"/><rect x="185.4" y="138.5" width="10.9" height="1.5" fill="#C09B5E" rx="2"/><text x="184.6" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 4</text><rect x="212.5" y="139.6" width="10.9" height="0.4" fill="#1C2B3A" rx="2"/><rect x="225.0" y="139.9" width="10.9" height="0.1" fill="#C09B5E" rx="2"/><text x="224.2" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 5</text><line x1="46" y1="140" x2="244" y2="140" stroke="#D6DDE0" stroke-width="1"/></svg></div>
+        <div class="leg"><span><span class="leg-dot" style="background:#1C2B3A"></span>Baseline</span><span><span class="leg-dot" style="background:#C09B5E"></span>Post-Launch</span></div>
       </div>
-      <div class="chart-card" id="card-brand">
-        <div class="card-title">Brand Split</div>
-        <canvas id="chartBrand" height="140"></canvas>
+      <div class="card">
+        <div class="ct">Brand Split</div>
+        <div class="chart-wrap"><svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="200" height="180" fill="#FFFFFF"/><rect x="30.2" y="54.9" width="49.5" height="95.1" fill="#1C2B3A" rx="2"/><text x="55.0" y="105.5" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">68%</text><rect x="30.2" y="10.0" width="49.5" height="44.9" fill="#C09B5E" rx="2"/><text x="55.0" y="35.5" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">32%</text><text x="55.0" y="164" font-size="9" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="120.2" y="76.8" width="49.5" height="73.2" fill="#1C2B3A" rx="2"/><text x="145.0" y="116.4" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">52%</text><rect x="120.2" y="10.0" width="49.5" height="66.8" fill="#C09B5E" rx="2"/><text x="145.0" y="46.4" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">48%</text><text x="145.0" y="164" font-size="9" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><line x1="10" y1="150" x2="190" y2="150" stroke="#D6DDE0" stroke-width="1"/></svg><div style="display:flex;gap:8px;margin-top:4px;justify-content:center"><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#1C2B3A;border-radius:1px"></span>Travel Trailer</span><span style="font-size:9px;color:#5C6E7A;display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;background:#C09B5E;border-radius:1px"></span>Touring Coach</span></div></div>
       </div>
     </div>
   </div>
-  <span class="e3-badge">AIMBase export · Element Three</span>
+  <span class="badge" style="color:var(--silver)">AIMBase export · Element Three</span>
 </section>
 
-<!-- ════════════════════════════════════════════════════════════ SLIDE 3 -->
-<section class="slide" id="slide-3">
-  <div class="slide-header">
-    <span class="airstream-wordmark">Airstream</span>
-    <span class="slide-counter">03 / 04</span>
-  </div>
-  <div class="slide-label">Forecast vs. Actual</div>
-  <h2 class="slide-title">Where Did June 2026 Land?</h2>
+<!-- ══ SLIDE 3 ══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="hdr"><span class="brand">Airstream</span><span class="ctr">03 / 04</span></div>
+  <div class="eyebrow">Forecast vs. Actual</div>
+  <h2>Where Did June 2026 Land?</h2>
   <div class="divider"></div>
-  <p class="slide-subtitle" style="color:var(--silver)">
-    Forecasted –7% from form elimination · June 2026 running –37% vs. baseline
-  </p>
+  <p class="sub">Forecasted –7% from form elimination · June 2026 running –37% vs. baseline</p>
 
-  <div class="two-col" style="flex:1">
-    <!-- Scenario matrix -->
-    <div class="chart-card dark" id="card-scenario">
-      <div class="card-title">Forecast Scenario Matrix</div>
-      <div class="card-subtitle">Red line = June 2026 actual pace (~12,026/mo)</div>
-      <canvas id="chartScenario" height="200"></canvas>
+  <div style="flex:1;display:grid;grid-template-rows:1fr auto;gap:1rem;min-height:0">
+    <div class="two-col">
+      <div class="card dark">
+        <div class="ct">Forecast Scenario Matrix</div>
+        <div class="cs">Red line = June 2026 actual pace (~12,026/mo)</div>
+        <div class="chart-wrap"><svg viewBox="0 0 440 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="440" height="220" fill="#243447"/><rect x="130" y="17.5" width="218.2" height="18.3" fill="#1C2B3A" rx="2"/><text x="124" y="29.7" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Baseline</text><text x="353.1818181818182" y="29.7" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">19,200</text><rect x="130" y="50.8" width="203.3" height="18.3" fill="#C09B5E" rx="2"/><text x="124" y="63.0" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Form Elim Only</text><text x="338.3068181818182" y="63.0" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">17,891</text><rect x="130" y="84.2" width="167.2" height="18.3" fill="#A8B4BC" rx="2"/><text x="124" y="96.3" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim + 50% CB</text><text x="302.2159090909091" y="96.3" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">14,715</text><rect x="130" y="117.5" width="152.8" height="18.3" fill="#5C6E7A" rx="2"/><text x="124" y="129.7" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim + 30% CB</text><text x="287.77272727272725" y="129.7" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">13,444</text><rect x="130" y="150.8" width="59.2" height="18.3" fill="#E67E22" rx="2"/><text x="124" y="163.0" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim+CB+Score 2+</text><text x="194.1818181818182" y="163.0" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">5,208</text><rect x="130" y="184.2" width="14.4" height="18.3" fill="#C0392B" rx="2"/><text x="124" y="196.3" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim+CB+Score 3+</text><text x="149.35227272727272" y="196.3" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">1,263</text><line x1="266.7" y1="10" x2="266.7" y2="210" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="4 3"/><text x="269.6590909090909" y="20" font-size="8" fill="#C0392B" font-family="sans-serif" font-weight="bold">Jun 2026</text></svg></div>
+      </div>
+      <div class="card dark">
+        <div class="ct">Monthly Volume — Baseline Through Post-Launch</div>
+        <div class="cs">*June 2026 projected from 18 days of actuals · Gold dashed = forecast</div>
+        <div class="chart-wrap"><svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="560" height="210" fill="#243447"/><line x1="46" y1="170.0" x2="544" y2="170.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="174.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="131.5" x2="544" y2="131.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="135.5" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">8k</text><line x1="46" y1="93.0" x2="544" y2="93.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="97.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">17k</text><line x1="46" y1="54.5" x2="544" y2="54.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="58.5" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">26k</text><line x1="46" y1="16.0" x2="544" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">35k</text><line x1="46" y1="92.5" x2="544" y2="92.5" stroke="#C09B5E" stroke-width="1.2" stroke-dasharray="4 3"/><text x="542" y="89.5" font-size="8" fill="#C09B5E" text-anchor="end" font-family="sans-serif">Forecast ~17,900</text><rect x="54.0" y="89.6" width="19.6" height="80.4" fill="#1C2B3A" rx="2"/><text x="63.8" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Mar</text><text x="63.8" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="89.6" y="99.9" width="19.6" height="70.1" fill="#1C2B3A" rx="2"/><text x="99.4" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Apr</text><text x="99.4" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="125.1" y="82.2" width="19.6" height="87.8" fill="#1C2B3A" rx="2"/><text x="134.9" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">May</text><text x="134.9" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="160.7" y="45.7" width="19.6" height="124.3" fill="#1C2B3A" rx="2"/><text x="170.5" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jun</text><text x="170.5" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="196.3" y="67.9" width="19.6" height="102.1" fill="#1C2B3A" rx="2"/><text x="206.1" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jul</text><text x="206.1" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="231.9" y="87.0" width="19.6" height="83.0" fill="#1C2B3A" rx="2"/><text x="241.6" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Aug</text><text x="241.6" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="267.4" y="99.4" width="19.6" height="70.6" fill="#1C2B3A" rx="2"/><text x="277.2" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Sep</text><text x="277.2" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="303.0" y="109.8" width="19.6" height="60.2" fill="#1C2B3A" rx="2"/><text x="312.8" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Oct</text><text x="312.8" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="338.6" y="117.6" width="19.6" height="52.4" fill="#1C2B3A" rx="2"/><text x="348.4" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Nov</text><text x="348.4" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="374.1" y="95.2" width="19.6" height="74.8" fill="#1C2B3A" rx="2"/><text x="383.9" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Dec</text><text x="383.9" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="409.7" y="32.5" width="19.6" height="137.5" fill="#1C2B3A" rx="2"/><text x="419.5" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Mar</text><text x="419.5" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="445.3" y="49.2" width="19.6" height="120.8" fill="#1C2B3A" rx="2"/><text x="455.1" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Apr</text><text x="455.1" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="480.9" y="61.5" width="19.6" height="108.5" fill="#1C2B3A" rx="2"/><text x="490.6" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">May</text><text x="490.6" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="516.4" y="117.9" width="19.6" height="52.1" fill="#C0392B" rx="2"/><text x="526.2" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jun</text><text x="526.2" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26*</text><line x1="46" y1="170" x2="544" y2="170" stroke="#D6DDE0" stroke-width="1"/></svg></div>
+        <div class="leg"><span><span class="leg-dot" style="background:#1C2B3A"></span>Pre-Launch</span><span><span class="leg-dot" style="background:#C0392B"></span>Post-Launch</span></div>
+      </div>
     </div>
-    <!-- Full timeline -->
-    <div class="chart-card dark" id="card-timeline">
-      <div class="card-title">Monthly Volume — Baseline Through Post-Launch</div>
-      <div class="card-subtitle">*June 2026 projected from 18 days of actuals</div>
-      <canvas id="chartTimeline" height="200"></canvas>
-    </div>
-    <!-- Table -->
-    <div class="chart-card dark full-row" id="card-table">
-      <div class="card-title">Forecast vs. Actual — Key Metrics</div>
-      <table class="comparison-table">
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Baseline (Before)</th>
-            <th>Forecast (Expected)</th>
-            <th>Actual — June 2026</th>
-            <th>vs. Forecast</th>
-          </tr>
-        </thead>
+    <div class="card dark full">
+      <div class="ct">Forecast vs. Actual — Key Metrics</div>
+      <table>
+        <thead><tr><th>Metric</th><th>Baseline</th><th>Forecast</th><th>Actual — June 2026</th><th>vs. Forecast</th></tr></thead>
         <tbody>
-          <tr>
-            <td>Total leads / mo</td>
-            <td>~19,200</td>
-            <td>~17,900 (–7%)</td>
-            <td class="actual-cell neg">~12,026</td>
-            <td class="actual-cell neg">–33%</td>
-          </tr>
-          <tr>
-            <td>Per dealer / mo</td>
-            <td>231</td>
-            <td>~216</td>
-            <td class="actual-cell neg">~145</td>
-            <td class="actual-cell neg">–33%</td>
-          </tr>
-          <tr>
-            <td>External Paid share</td>
-            <td>~60%</td>
-            <td>~60% (unchanged)</td>
-            <td class="actual-cell neg">81%</td>
-            <td style="color:var(--silver)">↑ Meta dominant</td>
-          </tr>
-          <tr>
-            <td>Score 3+ rate</td>
-            <td>6.3%</td>
-            <td>Flat-to-up (quality thesis)</td>
-            <td class="actual-cell pos">6.1%</td>
-            <td style="color:var(--silver)">Roughly flat</td>
-          </tr>
-          <tr>
-            <td>Travel Trailer share</td>
-            <td>68%</td>
-            <td>~66%</td>
-            <td class="actual-cell neg">52%</td>
-            <td style="color:var(--silver)">↓ TC overrepresented</td>
-          </tr>
+          <tr><td>Total leads / mo</td><td>~19,200</td><td>~17,900 (–7%)</td><td class="neg">~12,026</td><td class="neg">–33%</td></tr>
+          <tr><td>Per dealer / mo</td><td>231</td><td>~216</td><td class="neg">~145</td><td class="neg">–33%</td></tr>
+          <tr><td>External Paid share</td><td>~60%</td><td>~60% (unchanged)</td><td class="neg">81%</td><td style="color:var(--silver)">↑ Meta dominant</td></tr>
+          <tr><td>Score 3+ rate</td><td>6.3%</td><td>Flat-to-up</td><td class="pos">6.1%</td><td style="color:var(--silver)">Roughly flat</td></tr>
+          <tr><td>Travel Trailer share</td><td>68%</td><td>~66%</td><td class="neg">52%</td><td style="color:var(--silver)">↓ TC overrepresented</td></tr>
         </tbody>
       </table>
     </div>
   </div>
-  <span class="e3-badge">AIMBase export · Element Three</span>
+  <span class="badge">AIMBase export · Element Three</span>
 </section>
 
-<!-- ════════════════════════════════════════════════════════════ SLIDE 4 -->
-<section class="slide" id="slide-4">
-  <div class="slide-header">
-    <span class="airstream-wordmark">Airstream</span>
-    <span class="slide-counter" style="color:var(--mid)">04 / 04</span>
-  </div>
-  <div class="slide-label">Quality & Diagnostics</div>
-  <h2 class="slide-title">What to Watch</h2>
+<!-- ══ SLIDE 4 ══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="hdr"><span class="brand">Airstream</span><span class="ctr">04 / 04</span></div>
+  <div class="eyebrow">Quality & Diagnostics</div>
+  <h2>What to Watch</h2>
   <div class="divider"></div>
-  <p class="slide-subtitle">
-    Post-launch is only 22 days · Run full 60–90 day window before final conclusions
-  </p>
+  <p class="sub">Post-launch is only 22 days · Run full 60–90 day window before final conclusions</p>
 
-  <div class="bottom-charts">
-    <div class="chart-card" id="card-s3">
-      <div class="card-title">Score 3+ Rate</div>
-      <canvas id="chartS3" height="130"></canvas>
+  <div class="bottom-3">
+    <div class="card">
+      <div class="ct">Score 3+ Rate</div>
+      <div class="chart-wrap"><svg viewBox="0 0 220 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="220" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="204" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="101.5" x2="204" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">3%</text><line x1="46" y1="73.0" x2="204" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">6%</text><line x1="46" y1="44.5" x2="204" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">9%</text><line x1="46" y1="16.0" x2="204" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">12%</text><line x1="46" y1="54.0" x2="204" y2="54.0" stroke="#C09B5E" stroke-width="1.2" stroke-dasharray="4 3"/><text x="202" y="51.0" font-size="8" fill="#C09B5E" text-anchor="end" font-family="sans-serif">Forecast 8.0%</text><rect x="63.8" y="70.2" width="43.5" height="59.9" fill="#1C2B3A" rx="2"/><text x="85.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="142.8" y="72.1" width="43.5" height="57.9" fill="#27AE60" rx="2"/><text x="164.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><text x="164.5" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Actual</text><line x1="46" y1="130" x2="204" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg></div>
     </div>
-    <div class="chart-card" id="card-src-comp">
-      <div class="card-title">Source Mix Shift</div>
-      <canvas id="chartSrcComp" height="130"></canvas>
+    <div class="card">
+      <div class="ct">Source Mix Shift</div>
+      <div class="chart-wrap"><svg viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="320" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="304" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="101.5" x2="304" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">25%</text><line x1="46" y1="73.0" x2="304" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">50%</text><line x1="46" y1="44.5" x2="304" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">75%</text><line x1="46" y1="16.0" x2="304" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">100%</text><rect x="54.8" y="64.6" width="11.8" height="65.4" fill="#1C2B3A" rx="2"/><rect x="68.4" y="37.4" width="11.8" height="92.6" fill="#C09B5E" rx="2"/><text x="67.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Ext. Paid</text><rect x="97.8" y="106.4" width="11.8" height="23.6" fill="#1C2B3A" rx="2"/><rect x="111.4" y="123.4" width="11.8" height="6.6" fill="#C09B5E" rx="2"/><text x="110.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Direct</text><rect x="140.8" y="118.3" width="11.8" height="11.7" fill="#1C2B3A" rx="2"/><rect x="154.4" y="125.6" width="11.8" height="4.4" fill="#C09B5E" rx="2"/><text x="153.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Organic</text><rect x="183.8" y="123.5" width="11.8" height="6.5" fill="#1C2B3A" rx="2"/><rect x="197.4" y="123.2" width="11.8" height="6.8" fill="#C09B5E" rx="2"/><text x="196.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Email</text><rect x="226.8" y="126.6" width="11.8" height="3.4" fill="#1C2B3A" rx="2"/><rect x="240.4" y="128.5" width="11.8" height="1.5" fill="#C09B5E" rx="2"/><text x="239.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Paid</text><text x="239.5" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Srch</text><rect x="269.8" y="126.8" width="11.8" height="3.2" fill="#1C2B3A" rx="2"/><rect x="283.4" y="127.9" width="11.8" height="2.1" fill="#C09B5E" rx="2"/><text x="282.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Other</text><line x1="46" y1="130" x2="304" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg></div>
+      <div class="leg"><span><span class="leg-dot" style="background:#1C2B3A"></span>Baseline</span><span><span class="leg-dot" style="background:#C09B5E"></span>Post-Launch</span></div>
     </div>
-    <div class="chart-card" id="card-perdeal">
-      <div class="card-title">Leads / Dealer / Month</div>
-      <canvas id="chartPerDealer" height="130"></canvas>
+    <div class="card">
+      <div class="ct">Leads / Dealer / Month</div>
+      <div class="chart-wrap"><svg viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="240" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="224" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="101.5" x2="224" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">64</text><line x1="46" y1="73.0" x2="224" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">129</text><line x1="46" y1="44.5" x2="224" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">194</text><line x1="46" y1="16.0" x2="224" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">258</text><rect x="59.4" y="28.2" width="32.6" height="101.8" fill="#1C2B3A" rx="2"/><text x="75.7" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="118.7" y="34.8" width="32.6" height="95.2" fill="#C09B5E" rx="2"/><text x="135.0" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Forecast</text><rect x="178.0" y="66.1" width="32.6" height="63.9" fill="#C0392B" rx="2"/><text x="194.3" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><text x="194.3" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">(Jun rate)</text><line x1="46" y1="130" x2="224" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg></div>
     </div>
   </div>
 
   <div class="diag-grid">
-    <div class="diag-card warn" id="diag-1">
-      <div class="diag-icon">⚠️</div>
-      <div class="diag-head">Volume below forecast floor</div>
-      <div class="diag-body">June pace (~12,026/mo) is –33% vs. forecast ~17,900. Check: was a brochure checkbox added? Did the consolidated form's field count cut CVR? Did new-site top-of-funnel traffic fall on launch?</div>
+    <div class="diag warn">
+      <div class="dh">⚠️ Volume below forecast floor</div>
+      <div class="db">June pace (~12,026/mo) is –33% vs. forecast ~17,900. Check: was a brochure checkbox added? Did consolidated form field count cut CVR? Did new-site top-of-funnel traffic fall?</div>
     </div>
-    <div class="diag-card warn" id="diag-2">
-      <div class="diag-icon">⚠️</div>
-      <div class="diag-head">External Paid share surged to 81%</div>
-      <div class="diag-body">Baseline was ~57% Meta. Post-launch jump to 81% means website-captured volume (Direct, Organic, Email) collapsed more than paid. The new site may be converting on-site visitors at a lower rate.</div>
+    <div class="diag warn">
+      <div class="dh">⚠️ External Paid share surged to 81%</div>
+      <div class="db">Baseline was ~57% Meta. Post-launch jump to 81% means website-captured volume (Direct, Organic, Email) collapsed more than paid. The new site may be converting on-site visitors at a lower rate.</div>
     </div>
-    <div class="diag-card ok" id="diag-3">
-      <div class="diag-icon">✅</div>
-      <div class="diag-head">Score 3+ rate holding roughly flat</div>
-      <div class="diag-body">Post-launch 6.1% vs. 6.3% baseline — within noise. The "fewer but higher-quality leads" thesis is not yet confirmed, but also not disproved. Watch this metric as volume stabilizes over 60–90 days.</div>
+    <div class="diag ok">
+      <div class="dh">✅ Score 3+ rate holding roughly flat</div>
+      <div class="db">Post-launch 6.1% vs. 6.3% baseline — within noise. The "fewer but higher-quality leads" thesis is not yet disproved. Watch this metric as volume stabilizes over 60–90 days.</div>
     </div>
-    <div class="diag-card info" id="diag-4">
-      <div class="diag-icon">📅</div>
-      <div class="diag-head">Seasonality & window size caveat</div>
-      <div class="diag-body">June 2025 was the annual peak at 28,693 leads — comparing June 2026 actuals to the ~19,200 annual average understates the YoY decline. Compare June-to-June once the full month closes and re-run after 90 days.</div>
+    <div class="diag info">
+      <div class="dh">📅 Seasonality & window size caveat</div>
+      <div class="db">June 2025 was the annual peak at 28,693 leads. Compare June-to-June once the full month closes and re-run after 90 days before drawing final conclusions.</div>
     </div>
   </div>
-
-  <span class="e3-badge" style="color:var(--silver)">Element Three · Confidential</span>
+  <span class="badge" style="color:var(--silver)">Element Three · Confidential</span>
 </section>
 
-</div></div><!-- end slides-track / deck -->
+</div></div><!-- end track / deck -->
 
 <script>
-// ── Data ────────────────────────────────────────────────────────────────────
-const DATA = {
-  monthly: [
-    {label:"Mar 2025",leads:18551},{label:"Apr 2025",leads:16178},{label:"May 2025",leads:20272},
-    {label:"Jun 2025",leads:28693},{label:"Jul 2025",leads:23557},{label:"Aug 2025",leads:19161},
-    {label:"Sep 2025",leads:16305},{label:"Oct 2025",leads:13902},{label:"Nov 2025",leads:12106},
-    {label:"Dec 2025",leads:17258},{label:"Mar 2026",leads:31740},{label:"Apr 2026",leads:27896},
-    {label:"May 2026",leads:25048},{label:"Jun 2026*",leads:12026,postLaunch:true}
-  ],
-  source: {
-    labels:["External Paid (Meta)","Direct Traffic","Organic Search","Email Marketing","Paid Search","Other"],
-    baseline_pct:[57.4,20.7,10.3,5.7,3.0,2.8],
-    post_pct:[81.2,5.8,3.9,6.0,1.3,1.8]
-  },
-  scores: {
-    baseline:{"1":86.5,"2":14.8,"3":5.5,"4":1.5,"5":0.3},
-    post:{"1":82.5,"2":18.2,"3":4.8,"4":1.2,"5":0.1}
-  },
-  metrics:{
-    baseline_mo:19200, forecast_mo:17900, actual_mo:12026,
-    baseline_s3:6.3, post_s3:6.1,
-    b_tt_pct:67.9, b_tc_pct:32.1, p_tt_pct:52.3, p_tc_pct:47.7,
-    pct_vs_baseline:-37.4, pct_vs_forecast:-32.8
-  }
-};
+const track  = document.getElementById('track');
+const slides = document.querySelectorAll('.slide');
+const dots   = document.querySelectorAll('.dot');
+let cur = 0;
 
-const NAVY='#1C2B3A', NAVY_MID='#243447', SILVER='#A8B4BC', GOLD='#C09B5E',
-      GOLD_LT='#D4AF7A', WHITE='#FFFFFF', BG='#F4F6F7', MID='#5C6E7A',
-      RED='#C0392B', GREEN='#27AE60', SILVER_LT='#D6DDE0';
-
-Chart.defaults.animation = false;
-Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
-
-// ── Slide engine ──────────────────────────────────────────────────────────
-const track      = document.getElementById('slides-track');
-const slides     = document.querySelectorAll('.slide');
-const dots       = document.querySelectorAll('.nav-dot');
-const totalSlides = slides.length;
-let current      = 0;
-
-// Track which slides have had their animations fired
-const animated = new Set();
-
-function goTo(idx) {
-  idx = Math.max(0, Math.min(totalSlides - 1, idx));
-  if (idx === current && animated.has(idx)) return;
-  current = idx;
+function go(idx) {
+  idx = Math.max(0, Math.min(slides.length - 1, idx));
+  cur = idx;
   track.style.transform = `translateY(-${idx * 100}vh)`;
-  // Progress & dots
-  document.getElementById('progress').style.width = ((idx+1)/totalSlides*100)+'%';
-  dots.forEach((d,i) => d.classList.toggle('active', i===idx));
-  // Fire slide animations once
-  if (!animated.has(idx)) {
-    animated.add(idx);
-    setTimeout(() => animateSlide(idx), 80);
-  }
+  dots.forEach((d,i) => d.classList.toggle('on', i===idx));
 }
 
-function animateSlide(idx) {
-
-  // Init charts for this slide on first visit
-  if (CHART_FACTORIES[idx]) {
-    CHART_FACTORIES[idx]();
-    delete CHART_FACTORIES[idx]; // prevent double-init
-  }
-}
-
-// ── Wheel / touch input ───────────────────────────────────────────────────
-let wheelAccum = 0;
-let wheelTimer = null;
-const WHEEL_THRESHOLD = 60;
-
+let wa = 0, wt;
 window.addEventListener('wheel', e => {
   e.preventDefault();
-  wheelAccum += e.deltaY;
-  clearTimeout(wheelTimer);
-  wheelTimer = setTimeout(() => { wheelAccum = 0; }, 120);
-  if (Math.abs(wheelAccum) >= WHEEL_THRESHOLD) {
-    goTo(current + (wheelAccum > 0 ? 1 : -1));
-    wheelAccum = 0;
-  }
-}, { passive: false });
+  wa += e.deltaY;
+  clearTimeout(wt);
+  wt = setTimeout(() => { wa = 0; }, 120);
+  if (Math.abs(wa) > 60) { go(cur + (wa > 0 ? 1 : -1)); wa = 0; }
+}, {passive:false});
 
-// Touch swipe
-let touchStartY = 0;
-window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+let ty = 0;
+window.addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, {passive:true});
 window.addEventListener('touchend', e => {
-  const dy = touchStartY - e.changedTouches[0].clientY;
-  if (Math.abs(dy) > 40) goTo(current + (dy > 0 ? 1 : -1));
-}, { passive: true });
+  const d = ty - e.changedTouches[0].clientY;
+  if (Math.abs(d) > 40) go(cur + (d > 0 ? 1 : -1));
+}, {passive:true});
 
-// Keyboard
 window.addEventListener('keydown', e => {
-  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
-  if (e.key === 'ArrowUp'   || e.key === 'PageUp'  ) { e.preventDefault(); goTo(current - 1); }
+  if (e.key==='ArrowDown'||e.key==='PageDown') { e.preventDefault(); go(cur+1); }
+  if (e.key==='ArrowUp'  ||e.key==='PageUp'  ) { e.preventDefault(); go(cur-1); }
 });
-
-// Boot: fire slide 0 immediately
-goTo(0);
-
-
-// ── Count-up animation ────────────────────────────────────────────────────
-function animateCount(el) {
-  const target = parseInt(el.dataset.count);
-  const fmt = el.dataset.format;
-  const dur = 1200;
-  const start = performance.now();
-  function step(now) {
-    const pct = Math.min((now - start) / dur, 1);
-    const ease = 1 - Math.pow(1 - pct, 3);
-    const val = Math.round(ease * target);
-    el.textContent = fmt === 'comma' ? val.toLocaleString() : val;
-    if (pct < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
-const countObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      animateCount(e.target);
-      countObs.unobserve(e.target);
-    }
-  });
-}, {threshold: 0.5});
-document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
-
-// ── Lazy chart factories — keyed by slide index ───────────────────────────
-// Each factory is called ONCE when that slide first becomes active.
-const scoreLabels = ['1','2','3','4','5'];
-const scenLabels  = ['Baseline','Form Elim Only','Elim + 50% CB','Elim + 30% CB','Elim+CB+Score2+','Elim+CB+Score3+'];
-const scenVals    = [19200,17891,14715,13444,5208,1263];
-const scenColors  = [NAVY, GOLD, SILVER, MID,'#E67E22',RED];
-
-const CHART_FACTORIES = {
-  1: () => {   // Slide 2
-    new Chart(document.getElementById('chartMonthly'), {
-      type:'bar',
-      data:{
-        labels: DATA.monthly.slice(0,-1).map(d=>d.label),
-        datasets:[{ data: DATA.monthly.slice(0,-1).map(d=>d.leads),
-          backgroundColor: DATA.monthly.slice(0,-1).map(d=> d.label==='Jun 2025'?GOLD:NAVY),
-          borderRadius:4, borderSkipped:false }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false, animation:false,
-        
-        plugins:{ legend:{display:false},
-          tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toLocaleString()} leads`}},
-          annotation:{annotations:{baseline:{
-            type:'line',yMin:19200,yMax:19200,borderColor:SILVER,borderWidth:1.5,borderDash:[5,4],
-            label:{content:'Baseline avg ~19,200',display:true,position:'end',font:{size:10},color:MID,backgroundColor:'transparent'}
-          }}}
-        },
-        scales:{
-          x:{grid:{display:false},ticks:{color:MID,font:{size:10}}},
-          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}
-        }
-      }
-    });
-    new Chart(document.getElementById('chartSource'), {
-      type:'doughnut',
-      data:{labels:DATA.source.labels,datasets:[{
-        data:DATA.source.baseline_pct,
-        backgroundColor:[GOLD,NAVY,MID,SILVER,'#7F8C8D',SILVER_LT],
-        borderWidth:2,borderColor:WHITE,hoverOffset:8
-      }]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'62%',
-        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10,padding:6}},
-          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed.toFixed(1)}%`}}}}
-    });
-    new Chart(document.getElementById('chartScore'), {
-      type:'bar',
-      data:{labels:scoreLabels.map(s=>'Score '+s),datasets:[
-        {label:'Baseline',data:scoreLabels.map(s=>parseFloat(DATA.scores.baseline[s]||0)),backgroundColor:NAVY,borderRadius:3},
-        {label:'Post-Launch',data:scoreLabels.map(s=>parseFloat(DATA.scores.post[s]||0)),backgroundColor:GOLD,borderRadius:3}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
-        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
-          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
-    });
-    new Chart(document.getElementById('chartBrand'), {
-      type:'bar',
-      data:{labels:['Baseline','Post-Launch'],datasets:[
-        {label:'Travel Trailer',data:[67.9,52.3],backgroundColor:NAVY,borderRadius:4},
-        {label:'Touring Coach',data:[32.1,47.7],backgroundColor:GOLD,borderRadius:4}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}},
-          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`}}},
-        scales:{x:{stacked:true,grid:{display:false},ticks:{color:MID,font:{size:9}}},
-          y:{stacked:true,max:110,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
-    });
-  },
-  2: () => {   // Slide 3
-    new Chart(document.getElementById('chartScenario'), {
-      type:'bar',
-      data:{labels:scenLabels,datasets:[{data:scenVals,backgroundColor:scenColors,borderRadius:4,borderSkipped:false}]},
-      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{display:false},
-          tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x.toLocaleString()} leads/mo`}},
-          annotation:{annotations:{actual:{type:'line',xMin:12026,xMax:12026,
-            borderColor:RED,borderWidth:2,borderDash:[4,3],
-            label:{content:'Jun 2026: ~12,026',display:true,position:'start',
-                   font:{size:9,weight:'bold'},color:RED,backgroundColor:'rgba(0,0,0,.6)',padding:{x:4,y:2}}}}}},
-        scales:{x:{grid:{color:'rgba(255,255,255,.07)'},ticks:{color:SILVER,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}},
-          y:{grid:{display:false},ticks:{color:SILVER_LT,font:{size:9}}}}}
-    });
-    new Chart(document.getElementById('chartTimeline'), {
-      type:'bar',
-      data:{labels:DATA.monthly.map(d=>d.label),datasets:[
-        {type:'bar',label:'Pre-Launch',data:DATA.monthly.map(d=>d.postLaunch?null:d.leads),backgroundColor:NAVY,borderRadius:4},
-        {type:'bar',label:'Post-Launch (projected)',data:DATA.monthly.map(d=>d.postLaunch?d.leads:null),backgroundColor:RED,borderRadius:4},
-        {type:'line',label:'Forecast ~17,900',data:DATA.monthly.map(()=>17900),
-          borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{position:'bottom',labels:{color:SILVER_LT,font:{size:9},boxWidth:10,padding:8}},
-          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()??''}`}}},
-        scales:{x:{grid:{display:false},ticks:{color:SILVER,font:{size:9},maxRotation:45}},
-          y:{grid:{color:'rgba(255,255,255,.07)'},ticks:{color:SILVER,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
-    });
-  },
-  3: () => {   // Slide 4
-    new Chart(document.getElementById('chartS3'), {
-      type:'bar',
-      data:{labels:['Baseline','Post-Launch Actual'],datasets:[{
-        data:[6.3,6.1],backgroundColor:[NAVY,'#27AE60'],borderRadius:6,borderSkipped:false
-      }]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{display:false},
-          annotation:{annotations:{line:{type:'line',yMin:8.0,yMax:8.0,
-            borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],
-            label:{content:'Forecast floor 8.0%',display:true,position:'end',font:{size:9},color:GOLD,backgroundColor:'transparent'}}}}},
-        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
-          y:{grid:{color:'rgba(0,0,0,.05)'},max:12,ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
-    });
-    new Chart(document.getElementById('chartSrcComp'), {
-      type:'bar',
-      data:{labels:['Ext. Paid','Direct','Organic','Email','Paid Srch','Other'],datasets:[
-        {label:'Baseline',data:DATA.source.baseline_pct,backgroundColor:NAVY,borderRadius:3},
-        {label:'Post-Launch',data:DATA.source.post_pct,backgroundColor:GOLD,borderRadius:3}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
-        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
-          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
-    });
-    new Chart(document.getElementById('chartPerDealer'), {
-      type:'bar',
-      data:{labels:['Baseline','Forecast','Post-Launch\n(Jun rate)'],datasets:[{
-        data:[231,216,145],backgroundColor:[NAVY,GOLD,RED],borderRadius:6,borderSkipped:false
-      }]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} leads/dealer/mo`}}},
-        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
-          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9}}}}}
-    });
-  }
-};
 </script>
 </body>
 </html>

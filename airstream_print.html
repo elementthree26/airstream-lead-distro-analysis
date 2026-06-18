@@ -2,329 +2,764 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Airstream &middot; Dealer Lead Distribution</title>
+<title>Airstream &middot; Dealer Lead Distribution &middot; Forecast vs. Actual</title>
 <style>
-@page { size: 16in 9in; margin: 0; }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Helvetica, Arial, sans-serif; background: #1C2B3A; }
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; background: #1C2B3A; }
 
-.page { width: 1536px; height: 864px; overflow: hidden; page-break-after: always; position: relative; padding: 52px 72px 44px; }
-.page-light { background: #F4F6F7; }
-.page-navy  { background: #1C2B3A; }
+/* Page wrapper */
+.page {
+  width: 1536px;
+  height: 864px;
+  overflow: hidden;
+  page-break-after: always;
+  position: relative;
+}
 
-/* Typography */
-.eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #C09B5E; font-weight: 700; margin-bottom: 6px; }
-.h1 { font-size: 44px; font-weight: 900; line-height: 1.1; color: #FFFFFF; margin-bottom: 6px; }
-.h2-navy { font-size: 32px; font-weight: 900; color: #1C2B3A; margin-bottom: 4px; }
-.h2-white { font-size: 32px; font-weight: 900; color: #FFFFFF; margin-bottom: 4px; }
-.sub-silver { font-size: 13px; color: #A8B4BC; margin-bottom: 0; }
-.sub-mid    { font-size: 13px; color: #5C6E7A; margin-bottom: 0; }
-.divider { width: 44px; height: 3px; background: #C09B5E; border-radius: 2px; margin: 6px 0 14px; }
+/* ─── SHARED HEADER BAR ─────────────────────────────────────────── */
+.hdr-bar {
+  width: 1536px;
+  height: 44px;
+  background: #1C2B3A;
+  position: relative;
+}
+.hdr-bar-gold {
+  width: 1536px;
+  height: 44px;
+  background: #C09B5E;
+  position: relative;
+}
+.hdr-table {
+  display: table;
+  width: 100%;
+  height: 44px;
+  padding: 0 56px;
+}
+.hdr-left {
+  display: table-cell;
+  vertical-align: middle;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #FFFFFF;
+}
+.hdr-left-dark {
+  display: table-cell;
+  vertical-align: middle;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #1C2B3A;
+}
+.hdr-right {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: right;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #C09B5E;
+}
+.hdr-right-dark {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: right;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #1C2B3A;
+}
 
-/* Header row */
-.hdr { display: table; width: 100%; margin-bottom: 8px; }
-.hdr-brand { display: table-cell; font-size: 13px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; vertical-align: middle; }
-.hdr-ctr   { display: table-cell; font-size: 11px; color: #5C6E7A; letter-spacing: 2px; text-align: right; vertical-align: middle; }
-.hdr-white { color: #FFFFFF; }
-.hdr-navy  { color: #1C2B3A; }
+/* ─── FOOTER STRIP ──────────────────────────────────────────────── */
+.footer-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #C09B5E;
+}
+.footer-strip-thin {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #C09B5E;
+}
 
-/* Gold left accent */
-.accent { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #C09B5E; }
+/* ─── COMMON TEXT ───────────────────────────────────────────────── */
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #C09B5E;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.gold-rule {
+  width: 56px;
+  height: 4px;
+  background: #C09B5E;
+  border-radius: 2px;
+  margin: 12px 0 16px 0;
+}
+.gold-rule-sm {
+  width: 44px;
+  height: 3px;
+  background: #C09B5E;
+  border-radius: 2px;
+  margin: 8px 0 10px 0;
+}
 
-/* KPI row */
-.kpi-row { display: table; width: 100%; border-spacing: 10px 0; margin-top: 18px; }
-.kpi-cell { display: table-cell; background: #243447; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: 14px 12px; text-align: center; vertical-align: top; width: 25%; }
-.kpi-cell.gold-border { border-color: #C09B5E; }
-.kpi-cell.red-border  { border-color: #C0392B; }
-.kpi-val { font-size: 30px; font-weight: 900; color: #FFFFFF; display: block; }
-.kpi-val-red { color: #C0392B; }
-.kpi-lbl { font-size: 11px; color: #A8B4BC; margin-top: 4px; line-height: 1.4; }
-.kpi-delta { font-size: 12px; font-weight: 700; color: #C0392B; margin-top: 4px; }
+/* ─── PAGE 1 — TITLE SLIDE ──────────────────────────────────────── */
+.kpi-table {
+  display: table;
+  border-spacing: 12px 0;
+  margin-top: 28px;
+  margin-left: -12px;
+}
+.kpi-cell {
+  display: table-cell;
+  background: #243447;
+  border: 1.5px solid #2E4056;
+  border-radius: 10px;
+  padding: 16px 14px;
+  text-align: center;
+  vertical-align: top;
+  width: 340px;
+}
+.kpi-cell-gold {
+  display: table-cell;
+  background: #243447;
+  border: 1.5px solid #C09B5E;
+  border-radius: 10px;
+  padding: 16px 14px;
+  text-align: center;
+  vertical-align: top;
+  width: 340px;
+}
+.kpi-cell-red {
+  display: table-cell;
+  background: #243447;
+  border: 1.5px solid #C0392B;
+  border-radius: 10px;
+  padding: 16px 14px;
+  text-align: center;
+  vertical-align: top;
+  width: 340px;
+}
+.kpi-val {
+  font-size: 34px;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: block;
+}
+.kpi-val-red {
+  font-size: 34px;
+  font-weight: 700;
+  color: #C0392B;
+  display: block;
+}
+.kpi-label {
+  font-size: 11px;
+  color: #A8B4BC;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+.kpi-sub {
+  font-size: 13px;
+  font-weight: 700;
+  color: #C0392B;
+  margin-top: 4px;
+}
+.meta-table {
+  display: table;
+  width: 100%;
+  border-spacing: 0;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid #2A3A4A;
+}
+.meta-cell {
+  display: table-cell;
+  vertical-align: top;
+  padding-right: 20px;
+}
+.meta-key {
+  font-size: 10px;
+  color: #C09B5E;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+.meta-val {
+  font-size: 13px;
+  color: #D6DDE0;
+  margin-top: 2px;
+}
 
-/* Meta row */
-.meta-row { display: table; width: 100%; border-spacing: 0; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); }
-.meta-cell { display: table-cell; padding-right: 28px; vertical-align: top; }
-.meta-key { font-size: 10px; color: #C09B5E; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
-.meta-val { font-size: 13px; color: #D6DDE0; margin-top: 2px; }
+/* ─── CARDS ─────────────────────────────────────────────────────── */
+.card-light {
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 8px #00000011;
+  overflow: hidden;
+}
+.card-dark {
+  background: #243447;
+  border: 1px solid #2E4056;
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow: hidden;
+}
+.ct-light {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1C2B3A;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 3px;
+}
+.ct-dark {
+  font-size: 10px;
+  font-weight: 700;
+  color: #D6DDE0;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 3px;
+}
+.cs-light {
+  font-size: 10px;
+  color: #5C6E7A;
+  margin-bottom: 6px;
+}
+.cs-dark {
+  font-size: 10px;
+  color: #5C6E7A;
+  margin-bottom: 6px;
+}
 
-/* Cards */
-.card { background: #FFFFFF; border-radius: 8px; padding: 12px 14px; overflow: hidden; }
-.card-dark { background: #243447; border-radius: 8px; padding: 12px 14px; overflow: hidden; }
-.ct { font-size: 10px; font-weight: 700; color: #1C2B3A; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
-.ct-light { font-size: 10px; font-weight: 700; color: #D6DDE0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
-.cs { font-size: 10px; color: #5C6E7A; margin-bottom: 6px; }
-.cs-dark { font-size: 10px; color: #5C6E7A; margin-bottom: 6px; }
+/* ─── PAGE 2 LAYOUT ─────────────────────────────────────────────── */
+.p2-body {
+  background: #F4F6F7;
+  padding: 16px 56px 36px 56px;
+  position: relative;
+  height: 820px;
+}
+.bottom-row-table {
+  display: table;
+  border-spacing: 10px 0;
+  margin-top: 10px;
+  margin-left: -10px;
+  width: 1460px;
+}
+.br-cell-a {
+  display: table-cell;
+  width: 750px;
+  vertical-align: top;
+}
+.br-cell-b {
+  display: table-cell;
+  width: 420px;
+  vertical-align: top;
+}
+.br-cell-c {
+  display: table-cell;
+  width: 290px;
+  vertical-align: top;
+}
+.src-mix-table {
+  display: table;
+  width: 100%;
+  border-spacing: 12px 0;
+}
+.src-mix-donut {
+  display: table-cell;
+  width: 160px;
+  vertical-align: middle;
+}
+.src-mix-text {
+  display: table-cell;
+  vertical-align: middle;
+  font-size: 13px;
+  color: #5C6E7A;
+  line-height: 1.8;
+}
+.leg-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  vertical-align: middle;
+  margin-right: 3px;
+}
 
-/* Multi-column table layout */
-.cols { display: table; width: 100%; }
-.col  { display: table-cell; vertical-align: top; padding-right: 12px; }
-.col:last-child { padding-right: 0; }
-
-/* Data table */
-.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.data-table th { padding: 6px 10px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #A8B4BC; border-bottom: 1px solid rgba(255,255,255,.12); font-weight: 600; }
-.data-table th:not(:first-child) { text-align: right; }
-.data-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.06); color: #D6DDE0; }
-.data-table td:not(:first-child) { text-align: right; }
-.data-table td:first-child { color: #FFFFFF; font-weight: 600; }
+/* ─── PAGE 3 LAYOUT ─────────────────────────────────────────────── */
+.p3-body {
+  background: #1C2B3A;
+  padding: 16px 56px 10px 56px;
+  position: relative;
+  height: 820px;
+}
+.chart-row-table {
+  display: table;
+  border-spacing: 12px 0;
+  margin-top: 12px;
+  margin-left: -12px;
+  width: 1560px;
+}
+.chart-cell-left {
+  display: table-cell;
+  width: 640px;
+  vertical-align: top;
+}
+.chart-cell-right {
+  display: table-cell;
+  width: 820px;
+  vertical-align: top;
+}
+.metrics-card {
+  background: #243447;
+  border: 1px solid #2E4056;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 10px;
+}
+.metrics-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.metrics-tbl th {
+  padding: 5px 10px;
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #A8B4BC;
+  border-bottom: 1px solid #2E4056;
+  font-weight: 600;
+}
+.metrics-tbl th:not(:first-child) {
+  text-align: right;
+}
+.metrics-tbl td {
+  padding: 6px 10px;
+  color: #D6DDE0;
+  border-bottom: 1px solid #1E2F40;
+}
+.metrics-tbl td:first-child {
+  color: #FFFFFF;
+  font-weight: 600;
+  text-align: left;
+}
+.metrics-tbl td:not(:first-child) {
+  text-align: right;
+}
+.metrics-tbl tr:nth-child(even) td {
+  background: #1E3048;
+}
 .neg { color: #C0392B !important; font-weight: 700; }
 .pos { color: #27AE60 !important; font-weight: 700; }
+.sil { color: #A8B4BC; }
 
-/* Legend */
-.legend { font-size: 10px; color: #5C6E7A; margin-top: 4px; }
-.leg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 1px; margin-right: 3px; vertical-align: middle; }
-
-/* Diag cards */
-.diag { border-radius: 6px; padding: 10px 12px; }
-.diag-warn { background: #FDF0EE; border-left: 3px solid #C0392B; }
-.diag-ok   { background: #EDF7F1; border-left: 3px solid #27AE60; }
-.diag-info { background: #FFFFFF; border-left: 3px solid #A8B4BC; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
-.dh { font-size: 12px; font-weight: 700; color: #1C2B3A; margin-bottom: 4px; }
-.db { font-size: 11px; color: #5C6E7A; line-height: 1.5; }
-
-/* Footer badge */
-.badge { position: absolute; bottom: 16px; right: 72px; font-size: 10px; color: #5C6E7A; }
-.badge-light { color: #A8B4BC; }
-
-svg { display: block; }
+/* ─── PAGE 4 LAYOUT ─────────────────────────────────────────────── */
+.p4-body {
+  background: #F4F6F7;
+  padding: 16px 56px 36px 56px;
+  position: relative;
+  height: 820px;
+}
+.top-row-table {
+  display: table;
+  border-spacing: 10px 0;
+  margin-top: 10px;
+  margin-left: -10px;
+  width: 1460px;
+}
+.tr-cell-a {
+  display: table-cell;
+  width: 390px;
+  vertical-align: top;
+}
+.tr-cell-b {
+  display: table-cell;
+  width: 590px;
+  vertical-align: top;
+}
+.tr-cell-c {
+  display: table-cell;
+  width: 430px;
+  vertical-align: top;
+}
+.diag-table {
+  display: table;
+  border-spacing: 10px 0;
+  margin-top: 10px;
+  margin-left: -10px;
+  width: 1460px;
+}
+.diag-col {
+  display: table-cell;
+  width: 720px;
+  vertical-align: top;
+}
+.diag-warn {
+  background: #FEF4F3;
+  border-left: 4px solid #C0392B;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.diag-ok {
+  background: #EDF7F1;
+  border-left: 4px solid #27AE60;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.diag-info {
+  background: #FFFFFF;
+  border-left: 4px solid #A8B4BC;
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 4px #0000000f;
+  margin-bottom: 8px;
+}
+.dh {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1C2B3A;
+  margin-bottom: 4px;
+}
+.db {
+  font-size: 11px;
+  color: #5C6E7A;
+  line-height: 1.55;
+}
+.footer-credit {
+  position: absolute;
+  bottom: 10px;
+  right: 56px;
+  font-size: 10px;
+  color: #5C6E7A;
+}
 </style>
 </head>
 <body>
 
-<!-- ═══ PAGE 1: TITLE ═══ -->
-<div class="page page-navy">
-  <div class="accent"></div>
+<!-- ===============================================================
+     PAGE 1 - TITLE SLIDE
+================================================================ -->
+<div class="page">
+  <div style="background:#1C2B3A; width:1536px; height:864px; position:relative;">
+    <!-- 8px gold left bar -->
+    <div style="position:absolute;left:0;top:0;bottom:0;width:8px;background:#C09B5E;"></div>
 
-  <div class="hdr">
-    <div class="hdr-brand hdr-white">Airstream</div>
-    <div class="hdr-ctr">01 / 04</div>
+    <!-- Top header row -->
+    <div style="padding:14px 56px 12px 72px; border-bottom:1px solid #2A3A4A;">
+      <div style="display:table;width:100%;">
+        <div style="display:table-cell;vertical-align:middle;font-size:14px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#FFFFFF;">AIRSTREAM</div>
+        <div style="display:table-cell;vertical-align:middle;text-align:right;font-size:10px;color:#5C6E7A;">CONFIDENTIAL &middot; ELEMENT THREE &middot; JUNE 2026</div>
+      </div>
+    </div>
+
+    <!-- Content area -->
+    <div style="padding:50px 56px 0 72px;">
+      <div class="eyebrow">DEALER LEAD DISTRIBUTION</div>
+      <div style="font-size:52px;font-weight:900;line-height:1.05;color:#FFFFFF;">Forecast vs. Actual<br>Post-Launch Analysis</div>
+      <div class="gold-rule"></div>
+      <div style="font-size:15px;color:#A8B4BC;line-height:1.5;">How did the new Airstream website affect dealer lead volume?</div>
+      <div style="font-size:12px;color:#5C6E7A;margin-top:6px;">Pre-launch forecast &middot; May 27, 2026 launch &middot; 22 days of post-launch data</div>
+
+      <!-- KPI boxes -->
+      <div class="kpi-table">
+        <div class="kpi-cell-gold">
+          <span class="kpi-val">249,981</span>
+          <div class="kpi-label">Historical Leads / 13-mo baseline</div>
+        </div>
+        <div class="kpi-cell">
+          <span class="kpi-val">~19,200</span>
+          <div class="kpi-label">Avg Leads / Month / pre-launch baseline</div>
+        </div>
+        <div class="kpi-cell">
+          <span class="kpi-val">~17,900</span>
+          <div class="kpi-label">Forecasted Monthly / (&ndash;7% from baseline)</div>
+        </div>
+        <div class="kpi-cell-red">
+          <span class="kpi-val-red">~12,026</span>
+          <div class="kpi-label">June 2026 Pace / 18 days of data</div>
+          <div class="kpi-sub">&ndash;37% vs. baseline</div>
+        </div>
+      </div>
+
+      <!-- Meta row -->
+      <div class="meta-table">
+        <div class="meta-cell">
+          <div class="meta-key">Website Launch</div>
+          <div class="meta-val">May 27, 2026</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-key">Post-Launch Window</div>
+          <div class="meta-val">May 28 &ndash; June 18, 2026</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-key">Baseline Window</div>
+          <div class="meta-val">Mar 2025 &ndash; May 2026</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-key">Dealers</div>
+          <div class="meta-val">83</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-key">Pipeline</div>
+          <div class="meta-val">HubSpot &rarr; Make &rarr; AIMBase &rarr; Dealers</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-key">Prepared by</div>
+          <div class="meta-val">Element Three &middot; June 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer gold strip -->
+    <div class="footer-strip"></div>
   </div>
-
-  <div class="eyebrow">Dealer Lead Distribution</div>
-  <div class="h1">Forecast vs. Actual<br>Post-Launch Analysis</div>
-  <div class="divider"></div>
-  <div class="sub-silver">How did the new Airstream website change dealer lead volume?<br>
-  Pre-launch forecast &middot; May 27, 2026 launch &middot; 22 days of post-launch data</div>
-
-  <div class="kpi-row">
-    <div class="kpi-cell gold-border">
-      <span class="kpi-val">249,981</span>
-      <div class="kpi-lbl">Historical Leads<br>(13-mo baseline)</div>
-    </div>
-    <div class="kpi-cell">
-      <span class="kpi-val">~19,200</span>
-      <div class="kpi-lbl">Avg Leads / Month<br>(pre-launch baseline)</div>
-    </div>
-    <div class="kpi-cell">
-      <span class="kpi-val">~17,900</span>
-      <div class="kpi-lbl">Forecasted Monthly<br>Volume (&ndash;7%)</div>
-    </div>
-    <div class="kpi-cell red-border">
-      <span class="kpi-val kpi-val-red">~12,026</span>
-      <div class="kpi-lbl">June 2026 Pace<br>(18 days of data)</div>
-      <div class="kpi-delta">&ndash;37% vs. baseline</div>
-    </div>
-  </div>
-
-  <div class="meta-row">
-    <div class="meta-cell">
-      <div class="meta-key">Website Launch</div>
-      <div class="meta-val">May 27, 2026</div>
-    </div>
-    <div class="meta-cell">
-      <div class="meta-key">Post-Launch Window</div>
-      <div class="meta-val">May 28 &ndash; June 18, 2026</div>
-    </div>
-    <div class="meta-cell">
-      <div class="meta-key">Baseline Window</div>
-      <div class="meta-val">Mar 2025 &ndash; May 2026</div>
-    </div>
-    <div class="meta-cell">
-      <div class="meta-key">Dealers</div>
-      <div class="meta-val">83</div>
-    </div>
-    <div class="meta-cell">
-      <div class="meta-key">Pipeline</div>
-      <div class="meta-val">HubSpot &rarr; Make &rarr; AIMBase &rarr; Dealers</div>
-    </div>
-    <div class="meta-cell">
-      <div class="meta-key">Prepared by</div>
-      <div class="meta-val">Element Three &middot; June 2026</div>
-    </div>
-  </div>
-
-  <div class="badge badge-light">Element Three &middot; Confidential</div>
 </div>
 
-
-<!-- ═══ PAGE 2: PRE-LAUNCH BASELINE ═══ -->
-<div class="page page-light">
-  <div class="hdr">
-    <div class="hdr-brand hdr-navy">Airstream</div>
-    <div class="hdr-ctr">02 / 04</div>
-  </div>
-
-  <div class="eyebrow">Pre-Launch Baseline</div>
-  <div class="h2-navy">The &#8220;Before&#8221; Numbers</div>
-  <div class="divider"></div>
-  <div class="sub-mid" style="margin-bottom:10px">Mar 2025 &ndash; May 2026 &middot; AIMBase data &middot; 83 dealers</div>
-
-  <!-- Monthly trend chart -->
-  <div class="card" style="margin-bottom:10px">
-    <div class="ct">Monthly Lead Volume &mdash; Pre-Launch</div>
-    <div class="cs">Gold bar = Jun 2025 peak &middot; Dashed = ~19,200 baseline avg</div>
-    <div style="width:100%">
-      <svg viewBox="0 0 780 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="780" height="210" fill="#FFFFFF"/><line x1="46" y1="170.0" x2="764" y2="170.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="174.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="131.5" x2="764" y2="131.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="135.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">8k</text><line x1="46" y1="93.0" x2="764" y2="93.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="97.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">17k</text><line x1="46" y1="54.5" x2="764" y2="54.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="58.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">26k</text><line x1="46" y1="16.0" x2="764" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">35k</text><line x1="46" y1="86.8" x2="764" y2="86.8" stroke="#A8B4BC" stroke-width="2" stroke-dasharray="6 3"/><text x="762" y="83.8" font-size="8" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">Baseline ~19,200</text><rect x="58.4" y="89.6" width="30.4" height="80.4" fill="#1C2B3A" rx="2"/><text x="73.6" y="86.6" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">18k</text><text x="73.6" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Mar</text><text x="73.6" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="113.7" y="99.9" width="30.4" height="70.1" fill="#1C2B3A" rx="2"/><text x="128.8" y="96.9" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">16k</text><text x="128.8" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Apr</text><text x="128.8" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="168.9" y="82.2" width="30.4" height="87.8" fill="#1C2B3A" rx="2"/><text x="184.1" y="79.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">20k</text><text x="184.1" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">May</text><text x="184.1" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="224.1" y="45.7" width="30.4" height="124.3" fill="#C09B5E" rx="2"/><text x="239.3" y="42.7" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">28k</text><text x="239.3" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Jun</text><text x="239.3" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="279.4" y="67.9" width="30.4" height="102.1" fill="#1C2B3A" rx="2"/><text x="294.5" y="64.9" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">23k</text><text x="294.5" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Jul</text><text x="294.5" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="334.6" y="87.0" width="30.4" height="83.0" fill="#1C2B3A" rx="2"/><text x="349.8" y="84.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">19k</text><text x="349.8" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Aug</text><text x="349.8" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="389.8" y="99.4" width="30.4" height="70.6" fill="#1C2B3A" rx="2"/><text x="405.0" y="96.4" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">16k</text><text x="405.0" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Sep</text><text x="405.0" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="445.0" y="109.8" width="30.4" height="60.2" fill="#1C2B3A" rx="2"/><text x="460.2" y="106.8" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">13k</text><text x="460.2" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Oct</text><text x="460.2" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="500.3" y="117.6" width="30.4" height="52.4" fill="#1C2B3A" rx="2"/><text x="515.5" y="114.6" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">12k</text><text x="515.5" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Nov</text><text x="515.5" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="555.5" y="95.2" width="30.4" height="74.8" fill="#1C2B3A" rx="2"/><text x="570.7" y="92.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">17k</text><text x="570.7" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Dec</text><text x="570.7" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="610.7" y="32.5" width="30.4" height="137.5" fill="#1C2B3A" rx="2"/><text x="625.9" y="29.5" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">31k</text><text x="625.9" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Mar</text><text x="625.9" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><rect x="666.0" y="49.2" width="30.4" height="120.8" fill="#1C2B3A" rx="2"/><text x="681.2" y="46.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">27k</text><text x="681.2" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Apr</text><text x="681.2" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><rect x="721.2" y="61.5" width="30.4" height="108.5" fill="#1C2B3A" rx="2"/><text x="736.4" y="58.5" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">25k</text><text x="736.4" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">May</text><text x="736.4" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><line x1="46" y1="170" x2="764" y2="170" stroke="#D6DDE0" stroke-width="1"/></svg>
+<!-- ===============================================================
+     PAGE 2 - PRE-LAUNCH BASELINE
+================================================================ -->
+<div class="page">
+  <div class="hdr-bar">
+    <div class="hdr-table">
+      <div class="hdr-left">AIRSTREAM</div>
+      <div class="hdr-right">02 / 04</div>
     </div>
   </div>
+  <div class="p2-body">
+    <div class="eyebrow" style="margin-bottom:6px;">PRE-LAUNCH BASELINE</div>
+    <div style="font-size:30px;font-weight:700;color:#1C2B3A;margin-bottom:4px;">The &#8220;Before&#8221; Numbers</div>
+    <div class="gold-rule-sm"></div>
+    <div style="font-size:12px;color:#5C6E7A;margin-bottom:10px;">Mar 2025 &ndash; May 2026 &middot; AIMBase data &middot; 83 dealers</div>
 
-  <!-- Bottom 3 cards -->
-  <div class="cols">
-    <div class="col" style="width:52%">
-      <div class="card">
-        <div class="ct">Source Mix (Baseline)</div>
-        <div class="cols">
-          <div class="col" style="width:160px">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:160px;height:160px;display:block"><rect width="200" height="200" fill="#FFFFFF"/><path d="M 100.00 25.00 A 75 75 0 1 1 66.13 166.92 L 78.32 142.83 A 48 48 0 1 0 100.00 52.00 Z" fill="#C09B5E" stroke="#FFFFFF" stroke-width="1.5"/><text x="159.8" y="117.3" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">57%</text><path d="M 66.13 166.92 A 75 75 0 0 1 26.49 85.12 L 52.95 90.48 A 48 48 0 0 0 78.32 142.83 Z" fill="#1C2B3A" stroke="#FFFFFF" stroke-width="1.5"/><text x="44.7" y="129.8" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">21%</text><path d="M 26.49 85.12 A 75 75 0 0 1 50.36 43.78 L 68.23 64.02 A 48 48 0 0 0 52.95 90.48 Z" fill="#5C6E7A" stroke="#FFFFFF" stroke-width="1.5"/><text x="46.7" y="72.2" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">10%</text><path d="M 50.36 43.78 A 75 75 0 0 1 73.24 29.94 L 82.88 55.16 A 48 48 0 0 0 68.23 64.02 Z" fill="#A8B4BC" stroke="#FFFFFF" stroke-width="1.5"/><path d="M 73.24 29.94 A 75 75 0 0 1 86.86 26.16 L 91.59 52.74 A 48 48 0 0 0 82.88 55.16 Z" fill="#7F8C8D" stroke="#FFFFFF" stroke-width="1.5"/><path d="M 86.86 26.16 A 75 75 0 0 1 100.00 25.00 L 100.00 52.00 A 48 48 0 0 0 91.59 52.74 Z" fill="#D6DDE0" stroke="#FFFFFF" stroke-width="1.5"/></svg>
+    <!-- Monthly trend card -->
+    <div class="card-light">
+      <div class="ct-light">MONTHLY LEAD VOLUME &mdash; PRE-LAUNCH</div>
+      <div class="cs-light">Gold bar = Jun 2025 peak &middot; Dashed line = ~19,200 baseline avg</div>
+      <svg style="width:100%;height:auto;display:block" viewBox="0 0 780 210" xmlns="http://www.w3.org/2000/svg"><rect width="780" height="210" fill="#FFFFFF"/><line x1="46" y1="170.0" x2="764" y2="170.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="174.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="131.5" x2="764" y2="131.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="135.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">8k</text><line x1="46" y1="93.0" x2="764" y2="93.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="97.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">17k</text><line x1="46" y1="54.5" x2="764" y2="54.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="58.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">26k</text><line x1="46" y1="16.0" x2="764" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">35k</text><line x1="46" y1="86.8" x2="764" y2="86.8" stroke="#A8B4BC" stroke-width="2" stroke-dasharray="6 3"/><text x="762" y="83.8" font-size="8" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">Baseline ~19,200</text><rect x="58.4" y="89.6" width="30.4" height="80.4" fill="#1C2B3A" rx="2"/><text x="73.6" y="86.6" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">18k</text><text x="73.6" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Mar</text><text x="73.6" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="113.7" y="99.9" width="30.4" height="70.1" fill="#1C2B3A" rx="2"/><text x="128.8" y="96.9" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">16k</text><text x="128.8" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Apr</text><text x="128.8" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="168.9" y="82.2" width="30.4" height="87.8" fill="#1C2B3A" rx="2"/><text x="184.1" y="79.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">20k</text><text x="184.1" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">May</text><text x="184.1" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="224.1" y="45.7" width="30.4" height="124.3" fill="#C09B5E" rx="2"/><text x="239.3" y="42.7" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">28k</text><text x="239.3" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Jun</text><text x="239.3" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="279.4" y="67.9" width="30.4" height="102.1" fill="#1C2B3A" rx="2"/><text x="294.5" y="64.9" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">23k</text><text x="294.5" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Jul</text><text x="294.5" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="334.6" y="87.0" width="30.4" height="83.0" fill="#1C2B3A" rx="2"/><text x="349.8" y="84.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">19k</text><text x="349.8" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Aug</text><text x="349.8" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="389.8" y="99.4" width="30.4" height="70.6" fill="#1C2B3A" rx="2"/><text x="405.0" y="96.4" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">16k</text><text x="405.0" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Sep</text><text x="405.0" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="445.0" y="109.8" width="30.4" height="60.2" fill="#1C2B3A" rx="2"/><text x="460.2" y="106.8" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">13k</text><text x="460.2" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Oct</text><text x="460.2" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="500.3" y="117.6" width="30.4" height="52.4" fill="#1C2B3A" rx="2"/><text x="515.5" y="114.6" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">12k</text><text x="515.5" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Nov</text><text x="515.5" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="555.5" y="95.2" width="30.4" height="74.8" fill="#1C2B3A" rx="2"/><text x="570.7" y="92.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">17k</text><text x="570.7" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Dec</text><text x="570.7" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2025</text><rect x="610.7" y="32.5" width="30.4" height="137.5" fill="#1C2B3A" rx="2"/><text x="625.9" y="29.5" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">31k</text><text x="625.9" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Mar</text><text x="625.9" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><rect x="666.0" y="49.2" width="30.4" height="120.8" fill="#1C2B3A" rx="2"/><text x="681.2" y="46.2" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">27k</text><text x="681.2" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Apr</text><text x="681.2" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><rect x="721.2" y="61.5" width="30.4" height="108.5" fill="#1C2B3A" rx="2"/><text x="736.4" y="58.5" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">25k</text><text x="736.4" y="182.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">May</text><text x="736.4" y="193.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">2026</text><line x1="46" y1="170" x2="764" y2="170" stroke="#D6DDE0" stroke-width="1"/></svg>
+    </div>
+
+    <!-- Bottom 3-card row -->
+    <div class="bottom-row-table">
+      <div class="br-cell-a">
+        <div class="card-light" style="height:215px;">
+          <div class="ct-light">SOURCE MIX (BASELINE)</div>
+          <div class="src-mix-table">
+            <div class="src-mix-donut">
+              <svg style="width:100%;height:auto;display:block" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#FFFFFF"/><path d="M 100.00 25.00 A 75 75 0 1 1 66.13 166.92 L 78.32 142.83 A 48 48 0 1 0 100.00 52.00 Z" fill="#C09B5E" stroke="#FFFFFF" stroke-width="1.5"/><text x="159.8" y="117.3" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">57%</text><path d="M 66.13 166.92 A 75 75 0 0 1 26.49 85.12 L 52.95 90.48 A 48 48 0 0 0 78.32 142.83 Z" fill="#1C2B3A" stroke="#FFFFFF" stroke-width="1.5"/><text x="44.7" y="129.8" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">21%</text><path d="M 26.49 85.12 A 75 75 0 0 1 50.36 43.78 L 68.23 64.02 A 48 48 0 0 0 52.95 90.48 Z" fill="#5C6E7A" stroke="#FFFFFF" stroke-width="1.5"/><text x="46.7" y="72.2" font-size="8" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">10%</text><path d="M 50.36 43.78 A 75 75 0 0 1 73.24 29.94 L 82.88 55.16 A 48 48 0 0 0 68.23 64.02 Z" fill="#A8B4BC" stroke="#FFFFFF" stroke-width="1.5"/><path d="M 73.24 29.94 A 75 75 0 0 1 86.86 26.16 L 91.59 52.74 A 48 48 0 0 0 82.88 55.16 Z" fill="#7F8C8D" stroke="#FFFFFF" stroke-width="1.5"/><path d="M 86.86 26.16 A 75 75 0 0 1 100.00 25.00 L 100.00 52.00 A 48 48 0 0 0 91.59 52.74 Z" fill="#D6DDE0" stroke="#FFFFFF" stroke-width="1.5"/></svg>
+            </div>
+            <div class="src-mix-text">
+              <div><strong style="color:#1C2B3A;">~60%</strong> External Paid (Meta)</div>
+              <div><strong style="color:#1C2B3A;">~40%</strong> Website-Captured</div>
+              <div style="margin-top:8px;font-size:11px;color:#5C6E7A;">Meta leads unaffected by website change</div>
+            </div>
           </div>
-          <div class="col" style="font-size:12px;color:#5C6E7A;line-height:2;padding-top:20px">
-            <div><b style="color:#1C2B3A">~60%</b> External Paid (Meta)</div>
-            <div><b style="color:#1C2B3A">~40%</b> Website-Captured</div>
-            <div style="margin-top:6px;font-size:11px">Meta leads unaffected<br>by the website change</div>
+        </div>
+      </div>
+      <div class="br-cell-b">
+        <div class="card-light" style="height:215px;">
+          <div class="ct-light">SCORE DISTRIBUTION</div>
+          <svg style="width:100%;height:auto;display:block" viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg"><rect width="260" height="180" fill="#FFFFFF"/><line x1="46" y1="140.0" x2="244" y2="140.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="144.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="109.0" x2="244" y2="109.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="113.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">25%</text><line x1="46" y1="78.0" x2="244" y2="78.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="82.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">50%</text><line x1="46" y1="47.0" x2="244" y2="47.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="51.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">75%</text><line x1="46" y1="16.0" x2="244" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">100%</text><rect x="54.1" y="32.7" width="10.9" height="107.3" fill="#1C2B3A" rx="2"/><rect x="66.6" y="37.7" width="10.9" height="102.3" fill="#C09B5E" rx="2"/><text x="65.8" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 1</text><rect x="93.7" y="121.6" width="10.9" height="18.4" fill="#1C2B3A" rx="2"/><rect x="106.2" y="117.4" width="10.9" height="22.6" fill="#C09B5E" rx="2"/><text x="105.4" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 2</text><rect x="133.3" y="133.2" width="10.9" height="6.8" fill="#1C2B3A" rx="2"/><rect x="145.8" y="134.0" width="10.9" height="6.0" fill="#C09B5E" rx="2"/><text x="145.0" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 3</text><rect x="172.9" y="138.1" width="10.9" height="1.9" fill="#1C2B3A" rx="2"/><rect x="185.4" y="138.5" width="10.9" height="1.5" fill="#C09B5E" rx="2"/><text x="184.6" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 4</text><rect x="212.5" y="139.6" width="10.9" height="0.4" fill="#1C2B3A" rx="2"/><rect x="225.0" y="139.9" width="10.9" height="0.1" fill="#C09B5E" rx="2"/><text x="224.2" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 5</text><line x1="46" y1="140" x2="244" y2="140" stroke="#D6DDE0" stroke-width="1"/></svg>
+          <div style="margin-top:4px;">
+            <span style="font-size:9px;color:#5C6E7A;"><span class="leg-dot" style="background:#1C2B3A;"></span>Baseline</span>
+            &nbsp;&nbsp;
+            <span style="font-size:9px;color:#5C6E7A;"><span class="leg-dot" style="background:#C09B5E;"></span>Post-Launch</span>
+          </div>
+        </div>
+      </div>
+      <div class="br-cell-c">
+        <div class="card-light" style="height:215px;">
+          <div class="ct-light">BRAND SPLIT</div>
+          <svg style="width:100%;height:auto;display:block" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="180" fill="#FFFFFF"/><rect x="30.2" y="54.9" width="49.5" height="95.1" fill="#1C2B3A" rx="2"/><text x="55.0" y="105.5" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">68%</text><rect x="30.2" y="10.0" width="49.5" height="44.9" fill="#C09B5E" rx="2"/><text x="55.0" y="35.5" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">32%</text><text x="55.0" y="164" font-size="9" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="120.2" y="76.8" width="49.5" height="73.2" fill="#1C2B3A" rx="2"/><text x="145.0" y="116.4" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">52%</text><rect x="120.2" y="10.0" width="49.5" height="66.8" fill="#C09B5E" rx="2"/><text x="145.0" y="46.4" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">48%</text><text x="145.0" y="164" font-size="9" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><line x1="10" y1="150" x2="190" y2="150" stroke="#D6DDE0" stroke-width="1"/></svg>
+          <div style="margin-top:4px;">
+            <span style="font-size:9px;color:#5C6E7A;"><span class="leg-dot" style="background:#1C2B3A;"></span>Travel Trailer</span>
+            &nbsp;&nbsp;
+            <span style="font-size:9px;color:#5C6E7A;"><span class="leg-dot" style="background:#C09B5E;"></span>Touring Coach</span>
           </div>
         </div>
       </div>
     </div>
-    <div class="col" style="width:28%">
-      <div class="card">
-        <div class="ct">Score Distribution</div>
-        <svg viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="260" height="180" fill="#FFFFFF"/><line x1="46" y1="140.0" x2="244" y2="140.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="144.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="109.0" x2="244" y2="109.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="113.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">25%</text><line x1="46" y1="78.0" x2="244" y2="78.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="82.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">50%</text><line x1="46" y1="47.0" x2="244" y2="47.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="51.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">75%</text><line x1="46" y1="16.0" x2="244" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">100%</text><rect x="54.1" y="32.7" width="10.9" height="107.3" fill="#1C2B3A" rx="2"/><rect x="66.6" y="37.7" width="10.9" height="102.3" fill="#C09B5E" rx="2"/><text x="65.8" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 1</text><rect x="93.7" y="121.6" width="10.9" height="18.4" fill="#1C2B3A" rx="2"/><rect x="106.2" y="117.4" width="10.9" height="22.6" fill="#C09B5E" rx="2"/><text x="105.4" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 2</text><rect x="133.3" y="133.2" width="10.9" height="6.8" fill="#1C2B3A" rx="2"/><rect x="145.8" y="134.0" width="10.9" height="6.0" fill="#C09B5E" rx="2"/><text x="145.0" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 3</text><rect x="172.9" y="138.1" width="10.9" height="1.9" fill="#1C2B3A" rx="2"/><rect x="185.4" y="138.5" width="10.9" height="1.5" fill="#C09B5E" rx="2"/><text x="184.6" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 4</text><rect x="212.5" y="139.6" width="10.9" height="0.4" fill="#1C2B3A" rx="2"/><rect x="225.0" y="139.9" width="10.9" height="0.1" fill="#C09B5E" rx="2"/><text x="224.2" y="152.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Score 5</text><line x1="46" y1="140" x2="244" y2="140" stroke="#D6DDE0" stroke-width="1"/></svg>
-        <div class="legend"><span class="leg-dot" style="background:#1C2B3A"></span>Baseline &nbsp;<span class="leg-dot" style="background:#C09B5E"></span>Post-Launch</div>
-      </div>
-    </div>
-    <div class="col" style="width:20%">
-      <div class="card">
-        <div class="ct">Brand Split</div>
-        <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="200" height="180" fill="#FFFFFF"/><rect x="30.2" y="54.9" width="49.5" height="95.1" fill="#1C2B3A" rx="2"/><text x="55.0" y="105.5" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">68%</text><rect x="30.2" y="10.0" width="49.5" height="44.9" fill="#C09B5E" rx="2"/><text x="55.0" y="35.5" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">32%</text><text x="55.0" y="164" font-size="9" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="120.2" y="76.8" width="49.5" height="73.2" fill="#1C2B3A" rx="2"/><text x="145.0" y="116.4" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">52%</text><rect x="120.2" y="10.0" width="49.5" height="66.8" fill="#C09B5E" rx="2"/><text x="145.0" y="46.4" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif" font-weight="bold">48%</text><text x="145.0" y="164" font-size="9" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><line x1="10" y1="150" x2="190" y2="150" stroke="#D6DDE0" stroke-width="1"/></svg>
-        <div class="legend"><span class="leg-dot" style="background:#1C2B3A"></span>Travel Trailer &nbsp;<span class="leg-dot" style="background:#C09B5E"></span>Touring Coach</div>
-      </div>
-    </div>
-  </div>
 
-  <div class="badge">AIMBase export &middot; Element Three</div>
+    <div class="footer-strip-thin"></div>
+  </div>
 </div>
 
-
-<!-- ═══ PAGE 3: FORECAST VS ACTUAL ═══ -->
-<div class="page page-navy">
-  <div class="hdr">
-    <div class="hdr-brand hdr-white">Airstream</div>
-    <div class="hdr-ctr">03 / 04</div>
-  </div>
-
-  <div class="eyebrow">Forecast vs. Actual</div>
-  <div class="h2-white">Where Did June 2026 Land?</div>
-  <div class="divider"></div>
-  <div class="sub-silver" style="margin-bottom:10px">Forecasted &ndash;7% from form elimination &middot; June 2026 running &ndash;37% vs. baseline</div>
-
-  <!-- Two chart cards -->
-  <div class="cols" style="margin-bottom:10px">
-    <div class="col" style="width:44%">
-      <div class="card-dark">
-        <div class="ct-light">Forecast Scenario Matrix</div>
-        <div class="cs-dark">Red line = June 2026 actual pace (~12,026/mo)</div>
-        <svg viewBox="0 0 440 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="440" height="220" fill="#243447"/><rect x="130" y="17.5" width="218.2" height="18.3" fill="#1C2B3A" rx="2"/><text x="124" y="29.7" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Baseline</text><text x="353.1818181818182" y="29.7" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">19,200</text><rect x="130" y="50.8" width="203.3" height="18.3" fill="#C09B5E" rx="2"/><text x="124" y="63.0" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Form Elim Only</text><text x="338.3068181818182" y="63.0" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">17,891</text><rect x="130" y="84.2" width="167.2" height="18.3" fill="#A8B4BC" rx="2"/><text x="124" y="96.3" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim + 50% CB</text><text x="302.2159090909091" y="96.3" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">14,715</text><rect x="130" y="117.5" width="152.8" height="18.3" fill="#5C6E7A" rx="2"/><text x="124" y="129.7" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim + 30% CB</text><text x="287.77272727272725" y="129.7" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">13,444</text><rect x="130" y="150.8" width="59.2" height="18.3" fill="#E67E22" rx="2"/><text x="124" y="163.0" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim+CB+Score 2+</text><text x="194.1818181818182" y="163.0" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">5,208</text><rect x="130" y="184.2" width="14.4" height="18.3" fill="#C0392B" rx="2"/><text x="124" y="196.3" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim+CB+Score 3+</text><text x="149.35227272727272" y="196.3" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">1,263</text><line x1="266.7" y1="10" x2="266.7" y2="210" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="4 3"/><text x="269.6590909090909" y="20" font-size="8" fill="#C0392B" font-family="sans-serif" font-weight="bold">Jun 2026</text></svg>
-      </div>
-    </div>
-    <div class="col" style="width:56%">
-      <div class="card-dark">
-        <div class="ct-light">Monthly Volume &mdash; Baseline Through Post-Launch</div>
-        <div class="cs-dark">*June 2026 projected from 18 days of actuals &middot; Gold dashed = forecast</div>
-        <svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="560" height="210" fill="#243447"/><line x1="46" y1="170.0" x2="544" y2="170.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="174.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="131.5" x2="544" y2="131.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="135.5" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">8k</text><line x1="46" y1="93.0" x2="544" y2="93.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="97.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">17k</text><line x1="46" y1="54.5" x2="544" y2="54.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="58.5" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">26k</text><line x1="46" y1="16.0" x2="544" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">35k</text><line x1="46" y1="92.5" x2="544" y2="92.5" stroke="#C09B5E" stroke-width="2" stroke-dasharray="6 3"/><text x="542" y="89.5" font-size="8" fill="#C09B5E" text-anchor="end" font-family="sans-serif">Forecast ~17,900</text><rect x="54.0" y="89.6" width="19.6" height="80.4" fill="#1C2B3A" rx="2"/><text x="63.8" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Mar</text><text x="63.8" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="89.6" y="99.9" width="19.6" height="70.1" fill="#1C2B3A" rx="2"/><text x="99.4" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Apr</text><text x="99.4" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="125.1" y="82.2" width="19.6" height="87.8" fill="#1C2B3A" rx="2"/><text x="134.9" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">May</text><text x="134.9" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="160.7" y="45.7" width="19.6" height="124.3" fill="#1C2B3A" rx="2"/><text x="170.5" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jun</text><text x="170.5" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="196.3" y="67.9" width="19.6" height="102.1" fill="#1C2B3A" rx="2"/><text x="206.1" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jul</text><text x="206.1" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="231.9" y="87.0" width="19.6" height="83.0" fill="#1C2B3A" rx="2"/><text x="241.6" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Aug</text><text x="241.6" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="267.4" y="99.4" width="19.6" height="70.6" fill="#1C2B3A" rx="2"/><text x="277.2" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Sep</text><text x="277.2" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="303.0" y="109.8" width="19.6" height="60.2" fill="#1C2B3A" rx="2"/><text x="312.8" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Oct</text><text x="312.8" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="338.6" y="117.6" width="19.6" height="52.4" fill="#1C2B3A" rx="2"/><text x="348.4" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Nov</text><text x="348.4" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="374.1" y="95.2" width="19.6" height="74.8" fill="#1C2B3A" rx="2"/><text x="383.9" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Dec</text><text x="383.9" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="409.7" y="32.5" width="19.6" height="137.5" fill="#1C2B3A" rx="2"/><text x="419.5" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Mar</text><text x="419.5" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="445.3" y="49.2" width="19.6" height="120.8" fill="#1C2B3A" rx="2"/><text x="455.1" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Apr</text><text x="455.1" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="480.9" y="61.5" width="19.6" height="108.5" fill="#1C2B3A" rx="2"/><text x="490.6" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">May</text><text x="490.6" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="516.4" y="117.9" width="19.6" height="52.1" fill="#C0392B" rx="2"/><text x="526.2" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jun</text><text x="526.2" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26*</text><line x1="46" y1="170" x2="544" y2="170" stroke="#D6DDE0" stroke-width="1"/></svg>
-        <div class="legend" style="color:#A8B4BC;margin-top:4px"><span class="leg-dot" style="background:#1C2B3A;border:1px solid #A8B4BC"></span>Pre-Launch &nbsp;<span class="leg-dot" style="background:#C0392B"></span>Post-Launch</div>
-      </div>
+<!-- ===============================================================
+     PAGE 3 - FORECAST VS. ACTUAL
+================================================================ -->
+<div class="page">
+  <div class="hdr-bar-gold">
+    <div class="hdr-table">
+      <div class="hdr-left-dark">AIRSTREAM</div>
+      <div class="hdr-right-dark">03 / 04</div>
     </div>
   </div>
+  <div class="p3-body">
+    <div class="eyebrow">FORECAST VS. ACTUAL</div>
+    <div style="font-size:30px;font-weight:700;color:#FFFFFF;margin-bottom:4px;">Where Did June 2026 Land?</div>
+    <div class="gold-rule-sm"></div>
+    <div style="font-size:12px;color:#A8B4BC;">Forecasted &ndash;7% from form elimination &middot; June 2026 running &ndash;37% vs. baseline</div>
 
-  <!-- Metrics table -->
-  <div class="card-dark">
-    <div class="ct-light">Forecast vs. Actual &mdash; Key Metrics</div>
-    <table class="data-table">
-      <thead><tr><th>Metric</th><th>Baseline</th><th>Forecast</th><th>Actual &mdash; June 2026</th><th>vs. Forecast</th></tr></thead>
-      <tbody>
-        <tr><td>Total leads / mo</td><td>~19,200</td><td>~17,900 (&ndash;7%)</td><td class="neg">~12,026</td><td class="neg">&ndash;33%</td></tr>
-        <tr><td>Per dealer / mo</td><td>231</td><td>~216</td><td class="neg">~145</td><td class="neg">&ndash;33%</td></tr>
-        <tr><td>External Paid share</td><td>~60%</td><td>~60% (unchanged)</td><td class="neg">81%</td><td style="color:#A8B4BC">&uarr; Meta dominant</td></tr>
-        <tr><td>Score 3+ rate</td><td>6.3%</td><td>Flat-to-up</td><td class="pos">6.1%</td><td style="color:#A8B4BC">Roughly flat</td></tr>
-        <tr><td>Travel Trailer share</td><td>68%</td><td>~66%</td><td class="neg">52%</td><td style="color:#A8B4BC">&darr; TC overrepresented</td></tr>
-      </tbody>
-    </table>
+    <div class="chart-row-table">
+      <div class="chart-cell-left">
+        <div class="card-dark">
+          <div class="ct-dark">FORECAST SCENARIO MATRIX</div>
+          <div class="cs-dark">Red line = June 2026 actual pace (~12,026/mo)</div>
+          <svg style="width:100%;height:auto;display:block" viewBox="0 0 440 220" xmlns="http://www.w3.org/2000/svg"><rect width="440" height="220" fill="#243447"/><rect x="130" y="17.5" width="218.2" height="18.3" fill="#1C2B3A" rx="2"/><text x="124" y="29.7" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Baseline</text><text x="353.1818181818182" y="29.7" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">19,200</text><rect x="130" y="50.8" width="203.3" height="18.3" fill="#C09B5E" rx="2"/><text x="124" y="63.0" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Form Elim Only</text><text x="338.3068181818182" y="63.0" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">17,891</text><rect x="130" y="84.2" width="167.2" height="18.3" fill="#A8B4BC" rx="2"/><text x="124" y="96.3" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim + 50% CB</text><text x="302.2159090909091" y="96.3" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">14,715</text><rect x="130" y="117.5" width="152.8" height="18.3" fill="#5C6E7A" rx="2"/><text x="124" y="129.7" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim + 30% CB</text><text x="287.77272727272725" y="129.7" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">13,444</text><rect x="130" y="150.8" width="59.2" height="18.3" fill="#E67E22" rx="2"/><text x="124" y="163.0" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim+CB+Score 2+</text><text x="194.1818181818182" y="163.0" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">5,208</text><rect x="130" y="184.2" width="14.4" height="18.3" fill="#C0392B" rx="2"/><text x="124" y="196.3" font-size="8.5" fill="#D6DDE0" text-anchor="end" font-family="sans-serif">Elim+CB+Score 3+</text><text x="149.35227272727272" y="196.3" font-size="8" fill="#A8B4BC" text-anchor="start" font-family="sans-serif">1,263</text><line x1="266.7" y1="10" x2="266.7" y2="210" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="4 3"/><text x="269.6590909090909" y="20" font-size="8" fill="#C0392B" font-family="sans-serif" font-weight="bold">Jun 2026</text></svg>
+        </div>
+      </div>
+      <div class="chart-cell-right">
+        <div class="card-dark">
+          <div class="ct-dark">MONTHLY VOLUME &mdash; BASELINE THROUGH POST-LAUNCH</div>
+          <div class="cs-dark">*June 2026 projected from 18 days of actuals &middot; Gold dashed = forecast</div>
+          <svg style="width:100%;height:auto;display:block" viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg"><rect width="560" height="210" fill="#243447"/><line x1="46" y1="170.0" x2="544" y2="170.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="174.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="131.5" x2="544" y2="131.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="135.5" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">8k</text><line x1="46" y1="93.0" x2="544" y2="93.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="97.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">17k</text><line x1="46" y1="54.5" x2="544" y2="54.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="58.5" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">26k</text><line x1="46" y1="16.0" x2="544" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#A8B4BC" text-anchor="end" font-family="sans-serif">35k</text><line x1="46" y1="92.5" x2="544" y2="92.5" stroke="#C09B5E" stroke-width="2" stroke-dasharray="6 3"/><text x="542" y="89.5" font-size="8" fill="#C09B5E" text-anchor="end" font-family="sans-serif">Forecast ~17,900</text><rect x="54.0" y="89.6" width="19.6" height="80.4" fill="#1C2B3A" rx="2"/><text x="63.8" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Mar</text><text x="63.8" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="89.6" y="99.9" width="19.6" height="70.1" fill="#1C2B3A" rx="2"/><text x="99.4" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Apr</text><text x="99.4" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="125.1" y="82.2" width="19.6" height="87.8" fill="#1C2B3A" rx="2"/><text x="134.9" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">May</text><text x="134.9" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="160.7" y="45.7" width="19.6" height="124.3" fill="#1C2B3A" rx="2"/><text x="170.5" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jun</text><text x="170.5" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="196.3" y="67.9" width="19.6" height="102.1" fill="#1C2B3A" rx="2"/><text x="206.1" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jul</text><text x="206.1" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="231.9" y="87.0" width="19.6" height="83.0" fill="#1C2B3A" rx="2"/><text x="241.6" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Aug</text><text x="241.6" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="267.4" y="99.4" width="19.6" height="70.6" fill="#1C2B3A" rx="2"/><text x="277.2" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Sep</text><text x="277.2" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="303.0" y="109.8" width="19.6" height="60.2" fill="#1C2B3A" rx="2"/><text x="312.8" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Oct</text><text x="312.8" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="338.6" y="117.6" width="19.6" height="52.4" fill="#1C2B3A" rx="2"/><text x="348.4" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Nov</text><text x="348.4" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="374.1" y="95.2" width="19.6" height="74.8" fill="#1C2B3A" rx="2"/><text x="383.9" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Dec</text><text x="383.9" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">25</text><rect x="409.7" y="32.5" width="19.6" height="137.5" fill="#1C2B3A" rx="2"/><text x="419.5" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Mar</text><text x="419.5" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="445.3" y="49.2" width="19.6" height="120.8" fill="#1C2B3A" rx="2"/><text x="455.1" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Apr</text><text x="455.1" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="480.9" y="61.5" width="19.6" height="108.5" fill="#1C2B3A" rx="2"/><text x="490.6" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">May</text><text x="490.6" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26</text><rect x="516.4" y="117.9" width="19.6" height="52.1" fill="#C0392B" rx="2"/><text x="526.2" y="182.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">Jun</text><text x="526.2" y="193.0" font-size="8" fill="#A8B4BC" text-anchor="middle" font-family="sans-serif">26*</text><line x1="46" y1="170" x2="544" y2="170" stroke="#D6DDE0" stroke-width="1"/></svg>
+          <div style="margin-top:4px;">
+            <span style="font-size:9px;color:#A8B4BC;"><span class="leg-dot" style="background:#1C2B3A;border:1px solid #4A6070;"></span>Pre-Launch</span>
+            &nbsp;&nbsp;
+            <span style="font-size:9px;color:#A8B4BC;"><span class="leg-dot" style="background:#C0392B;"></span>Post-Launch</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metrics-card">
+      <div class="ct-dark">FORECAST vs. ACTUAL &mdash; KEY METRICS</div>
+      <table class="metrics-tbl">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Baseline</th>
+            <th>Forecast</th>
+            <th>Actual &mdash; June 2026</th>
+            <th>vs. Forecast</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total leads / mo</td>
+            <td>~19,200</td>
+            <td>~17,900 (&ndash;7%)</td>
+            <td class="neg">~12,026</td>
+            <td class="neg">&ndash;33%</td>
+          </tr>
+          <tr>
+            <td>Per dealer / mo</td>
+            <td>231</td>
+            <td>~216</td>
+            <td class="neg">~145</td>
+            <td class="neg">&ndash;33%</td>
+          </tr>
+          <tr>
+            <td>External Paid share</td>
+            <td>~60%</td>
+            <td>~60% (unchanged)</td>
+            <td class="neg">81%</td>
+            <td class="sil">&uarr; Meta dominant</td>
+          </tr>
+          <tr>
+            <td>Score 3+ rate</td>
+            <td>6.3%</td>
+            <td>Flat-to-up</td>
+            <td class="pos">6.1%</td>
+            <td class="sil">Roughly flat</td>
+          </tr>
+          <tr>
+            <td>Travel Trailer share</td>
+            <td>68%</td>
+            <td>~66%</td>
+            <td class="neg">52%</td>
+            <td class="sil">&darr; TC overrepresented</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer-strip"></div>
   </div>
-
-  <div class="badge badge-light">AIMBase export &middot; Element Three</div>
 </div>
 
-
-<!-- ═══ PAGE 4: QUALITY & DIAGNOSTICS ═══ -->
-<div class="page page-light">
-  <div class="hdr">
-    <div class="hdr-brand hdr-navy">Airstream</div>
-    <div class="hdr-ctr">04 / 04</div>
-  </div>
-
-  <div class="eyebrow">Quality &amp; Diagnostics</div>
-  <div class="h2-navy">What to Watch</div>
-  <div class="divider"></div>
-  <div class="sub-mid" style="margin-bottom:10px">Post-launch is only 22 days &middot; Run full 60&ndash;90 day window before final conclusions</div>
-
-  <!-- 3 chart cards -->
-  <div class="cols" style="margin-bottom:10px">
-    <div class="col" style="width:28%">
-      <div class="card">
-        <div class="ct">Score 3+ Rate</div>
-        <svg viewBox="0 0 220 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="220" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="204" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="101.5" x2="204" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">3%</text><line x1="46" y1="73.0" x2="204" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">6%</text><line x1="46" y1="44.5" x2="204" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">9%</text><line x1="46" y1="16.0" x2="204" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">12%</text><line x1="46" y1="54.0" x2="204" y2="54.0" stroke="#C09B5E" stroke-width="2" stroke-dasharray="6 3"/><text x="202" y="51.0" font-size="8" fill="#C09B5E" text-anchor="end" font-family="sans-serif">Forecast 8.0%</text><rect x="63.8" y="70.2" width="43.5" height="59.9" fill="#1C2B3A" rx="2"/><text x="85.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="142.8" y="72.1" width="43.5" height="57.9" fill="#27AE60" rx="2"/><text x="164.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><text x="164.5" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Actual</text><line x1="46" y1="130" x2="204" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg>
-      </div>
-    </div>
-    <div class="col" style="width:42%">
-      <div class="card">
-        <div class="ct">Source Mix Shift</div>
-        <svg viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="320" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="304" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="101.5" x2="304" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">25%</text><line x1="46" y1="73.0" x2="304" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">50%</text><line x1="46" y1="44.5" x2="304" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">75%</text><line x1="46" y1="16.0" x2="304" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">100%</text><rect x="54.8" y="64.6" width="11.8" height="65.4" fill="#1C2B3A" rx="2"/><rect x="68.4" y="37.4" width="11.8" height="92.6" fill="#C09B5E" rx="2"/><text x="67.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Ext. Paid</text><rect x="97.8" y="106.4" width="11.8" height="23.6" fill="#1C2B3A" rx="2"/><rect x="111.4" y="123.4" width="11.8" height="6.6" fill="#C09B5E" rx="2"/><text x="110.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Direct</text><rect x="140.8" y="118.3" width="11.8" height="11.7" fill="#1C2B3A" rx="2"/><rect x="154.4" y="125.6" width="11.8" height="4.4" fill="#C09B5E" rx="2"/><text x="153.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Organic</text><rect x="183.8" y="123.5" width="11.8" height="6.5" fill="#1C2B3A" rx="2"/><rect x="197.4" y="123.2" width="11.8" height="6.8" fill="#C09B5E" rx="2"/><text x="196.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Email</text><rect x="226.8" y="126.6" width="11.8" height="3.4" fill="#1C2B3A" rx="2"/><rect x="240.4" y="128.5" width="11.8" height="1.5" fill="#C09B5E" rx="2"/><text x="239.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Paid</text><text x="239.5" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Srch</text><rect x="269.8" y="126.8" width="11.8" height="3.2" fill="#1C2B3A" rx="2"/><rect x="283.4" y="127.9" width="11.8" height="2.1" fill="#C09B5E" rx="2"/><text x="282.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Other</text><line x1="46" y1="130" x2="304" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg>
-        <div class="legend"><span class="leg-dot" style="background:#1C2B3A"></span>Baseline &nbsp;<span class="leg-dot" style="background:#C09B5E"></span>Post-Launch</div>
-      </div>
-    </div>
-    <div class="col" style="width:30%">
-      <div class="card">
-        <div class="ct">Leads / Dealer / Month</div>
-        <svg viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"><rect width="240" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="224" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="101.5" x2="224" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">64</text><line x1="46" y1="73.0" x2="224" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">129</text><line x1="46" y1="44.5" x2="224" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">194</text><line x1="46" y1="16.0" x2="224" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">258</text><rect x="59.4" y="28.2" width="32.6" height="101.8" fill="#1C2B3A" rx="2"/><text x="75.7" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="118.7" y="34.8" width="32.6" height="95.2" fill="#C09B5E" rx="2"/><text x="135.0" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Forecast</text><rect x="178.0" y="66.1" width="32.6" height="63.9" fill="#C0392B" rx="2"/><text x="194.3" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><text x="194.3" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">(Jun rate)</text><line x1="46" y1="130" x2="224" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg>
-      </div>
+<!-- ===============================================================
+     PAGE 4 - QUALITY & DIAGNOSTICS
+================================================================ -->
+<div class="page">
+  <div class="hdr-bar">
+    <div class="hdr-table">
+      <div class="hdr-left">AIRSTREAM</div>
+      <div class="hdr-right">04 / 04</div>
     </div>
   </div>
+  <div class="p4-body">
+    <div class="eyebrow" style="margin-bottom:6px;">QUALITY &amp; DIAGNOSTICS</div>
+    <div style="font-size:30px;font-weight:700;color:#1C2B3A;margin-bottom:4px;">What to Watch</div>
+    <div class="gold-rule-sm"></div>
+    <div style="font-size:12px;color:#5C6E7A;margin-bottom:0;">Post-launch is only 22 days &middot; Run full 60&ndash;90 day window before final conclusions</div>
 
-  <!-- 2x2 diag cards -->
-  <div class="cols">
-    <div class="col" style="width:50%">
-      <div class="diag diag-warn" style="margin-bottom:8px">
-        <div class="dh">&#9888; Volume below forecast floor</div>
-        <div class="db">June pace (~12,026/mo) is &ndash;33% vs. forecast ~17,900. Check: was a brochure checkbox added? Did consolidated form field count cut CVR? Did new-site top-of-funnel traffic fall?</div>
+    <div class="top-row-table">
+      <div class="tr-cell-a">
+        <div class="card-light">
+          <div class="ct-light">SCORE 3+ RATE</div>
+          <svg style="width:100%;height:auto;display:block" viewBox="0 0 220 170" xmlns="http://www.w3.org/2000/svg"><rect width="220" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="204" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="101.5" x2="204" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">3%</text><line x1="46" y1="73.0" x2="204" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">6%</text><line x1="46" y1="44.5" x2="204" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">9%</text><line x1="46" y1="16.0" x2="204" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">12%</text><line x1="46" y1="54.0" x2="204" y2="54.0" stroke="#C09B5E" stroke-width="2" stroke-dasharray="6 3"/><text x="202" y="51.0" font-size="8" fill="#C09B5E" text-anchor="end" font-family="sans-serif">Forecast 8.0%</text><rect x="63.8" y="70.2" width="43.5" height="59.9" fill="#1C2B3A" rx="2"/><text x="85.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="142.8" y="72.1" width="43.5" height="57.9" fill="#27AE60" rx="2"/><text x="164.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><text x="164.5" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Actual</text><line x1="46" y1="130" x2="204" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg>
+        </div>
       </div>
-      <div class="diag diag-ok">
-        <div class="dh">&#10003; Score 3+ rate holding roughly flat</div>
-        <div class="db">Post-launch 6.1% vs. 6.3% baseline &mdash; within noise. The &#8220;fewer but higher-quality leads&#8221; thesis is not yet disproved. Watch as volume stabilizes over 60&ndash;90 days.</div>
+      <div class="tr-cell-b">
+        <div class="card-light">
+          <div class="ct-light">SOURCE MIX SHIFT</div>
+          <svg style="width:100%;height:auto;display:block" viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="304" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0%</text><line x1="46" y1="101.5" x2="304" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">25%</text><line x1="46" y1="73.0" x2="304" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">50%</text><line x1="46" y1="44.5" x2="304" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">75%</text><line x1="46" y1="16.0" x2="304" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">100%</text><rect x="54.8" y="64.6" width="11.8" height="65.4" fill="#1C2B3A" rx="2"/><rect x="68.4" y="37.4" width="11.8" height="92.6" fill="#C09B5E" rx="2"/><text x="67.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Ext. Paid</text><rect x="97.8" y="106.4" width="11.8" height="23.6" fill="#1C2B3A" rx="2"/><rect x="111.4" y="123.4" width="11.8" height="6.6" fill="#C09B5E" rx="2"/><text x="110.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Direct</text><rect x="140.8" y="118.3" width="11.8" height="11.7" fill="#1C2B3A" rx="2"/><rect x="154.4" y="125.6" width="11.8" height="4.4" fill="#C09B5E" rx="2"/><text x="153.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Organic</text><rect x="183.8" y="123.5" width="11.8" height="6.5" fill="#1C2B3A" rx="2"/><rect x="197.4" y="123.2" width="11.8" height="6.8" fill="#C09B5E" rx="2"/><text x="196.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Email</text><rect x="226.8" y="126.6" width="11.8" height="3.4" fill="#1C2B3A" rx="2"/><rect x="240.4" y="128.5" width="11.8" height="1.5" fill="#C09B5E" rx="2"/><text x="239.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Paid</text><text x="239.5" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Srch</text><rect x="269.8" y="126.8" width="11.8" height="3.2" fill="#1C2B3A" rx="2"/><rect x="283.4" y="127.9" width="11.8" height="2.1" fill="#C09B5E" rx="2"/><text x="282.5" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Other</text><line x1="46" y1="130" x2="304" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg>
+          <div style="margin-top:4px;">
+            <span style="font-size:9px;color:#5C6E7A;"><span class="leg-dot" style="background:#1C2B3A;"></span>Baseline</span>
+            &nbsp;&nbsp;
+            <span style="font-size:9px;color:#5C6E7A;"><span class="leg-dot" style="background:#C09B5E;"></span>Post-Launch</span>
+          </div>
+        </div>
+      </div>
+      <div class="tr-cell-c">
+        <div class="card-light">
+          <div class="ct-light">LEADS / DEALER / MONTH</div>
+          <svg style="width:100%;height:auto;display:block" viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg"><rect width="240" height="170" fill="#FFFFFF"/><line x1="46" y1="130.0" x2="224" y2="130.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="134.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">0</text><line x1="46" y1="101.5" x2="224" y2="101.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="105.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">64</text><line x1="46" y1="73.0" x2="224" y2="73.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="77.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">129</text><line x1="46" y1="44.5" x2="224" y2="44.5" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="48.5" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">194</text><line x1="46" y1="16.0" x2="224" y2="16.0" stroke="#D6DDE0" stroke-width="0.5"/><text x="42" y="20.0" font-size="9" fill="#5C6E7A" text-anchor="end" font-family="sans-serif">258</text><rect x="59.4" y="28.2" width="32.6" height="101.8" fill="#1C2B3A" rx="2"/><text x="75.7" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Baseline</text><rect x="118.7" y="34.8" width="32.6" height="95.2" fill="#C09B5E" rx="2"/><text x="135.0" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Forecast</text><rect x="178.0" y="66.1" width="32.6" height="63.9" fill="#C0392B" rx="2"/><text x="194.3" y="142.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">Post-Launch</text><text x="194.3" y="153.0" font-size="8" fill="#5C6E7A" text-anchor="middle" font-family="sans-serif">(Jun rate)</text><line x1="46" y1="130" x2="224" y2="130" stroke="#D6DDE0" stroke-width="1"/></svg>
+        </div>
       </div>
     </div>
-    <div class="col" style="width:50%">
-      <div class="diag diag-warn" style="margin-bottom:8px">
-        <div class="dh">&#9888; External Paid share surged to 81%</div>
-        <div class="db">Baseline was ~57% Meta. Post-launch jump to 81% means website-captured volume (Direct, Organic, Email) collapsed more than paid. The new site may be converting on-site visitors at a lower rate.</div>
+
+    <div class="diag-table">
+      <div class="diag-col">
+        <div class="diag-warn">
+          <div class="dh">&#9888; Volume below forecast floor</div>
+          <div class="db">June pace (~12,026/mo) is &ndash;33% vs. forecast ~17,900. Check: was a brochure checkbox added? Did consolidated form field count cut CVR? Did new-site top-of-funnel traffic fall?</div>
+        </div>
+        <div class="diag-ok">
+          <div class="dh">&#10003; Score 3+ rate holding roughly flat</div>
+          <div class="db">Post-launch 6.1% vs. 6.3% baseline &mdash; within noise. The &#8220;fewer but higher-quality leads&#8221; thesis is not yet disproved. Watch as volume stabilizes over 60&ndash;90 days.</div>
+        </div>
       </div>
-      <div class="diag diag-info">
-        <div class="dh">&#128197; Seasonality &amp; window size caveat</div>
-        <div class="db">June 2025 was the annual peak at 28,693 leads. Compare June-to-June once the full month closes and re-run after 90 days before drawing final conclusions.</div>
+      <div class="diag-col">
+        <div class="diag-warn">
+          <div class="dh">&#9888; External Paid share surged to 81%</div>
+          <div class="db">Baseline was ~57% Meta. Post-launch jump to 81% means website-captured volume (Direct, Organic, Email) collapsed more than paid. The new site may be converting on-site visitors at a lower rate.</div>
+        </div>
+        <div class="diag-info">
+          <div class="dh">&#128197; Seasonality &amp; window size caveat</div>
+          <div class="db">June 2025 was the annual peak at 28,693 leads. Compare June-to-June once the full month closes and re-run after 90 days before drawing final conclusions.</div>
+        </div>
       </div>
     </div>
+
+    <div class="footer-credit">Element Three &middot; Confidential</div>
+    <div class="footer-strip-thin"></div>
   </div>
-
-  <div class="badge">Element Three &middot; Confidential</div>
 </div>
 
 </body>

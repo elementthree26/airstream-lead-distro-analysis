@@ -24,7 +24,8 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  html { overflow: hidden; }
+  body { overflow: hidden; }
 
   body {
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -54,9 +55,19 @@
   }
 
   /* ── Slides ───────────────────────────────────────────────── */
+  #deck {
+    position: fixed; inset: 0;
+    overflow: hidden;
+  }
+
+  #slides-track {
+    position: absolute; top: 0; left: 0; right: 0;
+    will-change: transform;
+    transition: transform 0.72s cubic-bezier(0.77, 0, 0.175, 1);
+  }
+
   .slide {
-    min-height: var(--slide-h);
-    scroll-snap-align: start;
+    height: 100vh;
     display: flex; flex-direction: column;
     position: relative; overflow: hidden;
     padding: 3.5rem 4rem 2.5rem;
@@ -266,7 +277,6 @@
 <body>
 
 <div id="progress"></div>
-
 <nav id="nav">
   <button class="nav-dot active" onclick="goTo(0)" title="Title"></button>
   <button class="nav-dot" onclick="goTo(1)" title="Baseline"></button>
@@ -274,6 +284,7 @@
   <button class="nav-dot" onclick="goTo(3)" title="Quality & Diagnostics"></button>
 </nav>
 
+<div id="deck"><div id="slides-track">
 <!-- ════════════════════════════════════════════════════════════ SLIDE 1 -->
 <section class="slide" id="slide-1">
   <div class="bg-text">AIRSTREAM</div>
@@ -514,6 +525,8 @@
   <span class="e3-badge" style="color:var(--silver)">Element Three · Confidential</span>
 </section>
 
+</div></div><!-- end slides-track / deck -->
+
 <script>
 // ── Data ────────────────────────────────────────────────────────────────────
 const DATA = {
@@ -547,41 +560,77 @@ const NAVY='#1C2B3A', NAVY_MID='#243447', SILVER='#A8B4BC', GOLD='#C09B5E',
 
 Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
 
-// ── Intersection Observer to trigger animations ──────────────────────────
-const slides = document.querySelectorAll('.slide');
-const dots = document.querySelectorAll('.nav-dot');
+// ── Slide engine ──────────────────────────────────────────────────────────
+const track      = document.getElementById('slides-track');
+const slides     = document.querySelectorAll('.slide');
+const dots       = document.querySelectorAll('.nav-dot');
 const totalSlides = slides.length;
+let current      = 0;
+let animating    = false;
+const ANIM_MS    = 720;
 
-function updateProgress(idx) {
-  document.getElementById('progress').style.width = ((idx+1)/totalSlides*100)+'%';
-  dots.forEach((d,i) => d.classList.toggle('active', i===idx));
-}
+// Track which slides have had their animations fired
+const animated = new Set();
 
 function goTo(idx) {
-  slides[idx].scrollIntoView({behavior:'smooth'});
+  idx = Math.max(0, Math.min(totalSlides - 1, idx));
+  if (idx === current && animated.has(idx)) return;
+  current = idx;
+  track.style.transform = `translateY(-${idx * 100}vh)`;
+  // Progress & dots
+  document.getElementById('progress').style.width = ((idx+1)/totalSlides*100)+'%';
+  dots.forEach((d,i) => d.classList.toggle('active', i===idx));
+  // Fire slide animations once
+  if (!animated.has(idx)) {
+    animated.add(idx);
+    setTimeout(() => animateSlide(idx), 80);
+  }
+  animating = true;
+  setTimeout(() => { animating = false; }, ANIM_MS);
 }
 
-const slideObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting && e.intersectionRatio > 0.4) {
-      const idx = Array.from(slides).indexOf(e.target);
-      updateProgress(idx);
-    }
+function animateSlide(idx) {
+  const slide = slides[idx];
+  slide.querySelectorAll('.kpi-box, .chart-card, .diag-card').forEach(el => {
+    el.classList.add('vis');
   });
-}, {threshold:0.4});
-slides.forEach(s => slideObs.observe(s));
+}
 
-// ── Animate elements on entry ─────────────────────────────────────────────
-const elemObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('vis');
-      elemObs.unobserve(e.target);
-    }
-  });
-}, {threshold: 0.15});
+// ── Wheel / touch input ───────────────────────────────────────────────────
+let wheelAccum = 0;
+let wheelTimer = null;
+const WHEEL_THRESHOLD = 60;
 
-document.querySelectorAll('.kpi-box,.chart-card,.diag-card').forEach(el => elemObs.observe(el));
+window.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (animating) return;
+  wheelAccum += e.deltaY;
+  clearTimeout(wheelTimer);
+  wheelTimer = setTimeout(() => { wheelAccum = 0; }, 120);
+  if (Math.abs(wheelAccum) >= WHEEL_THRESHOLD) {
+    goTo(current + (wheelAccum > 0 ? 1 : -1));
+    wheelAccum = 0;
+  }
+}, { passive: false });
+
+// Touch swipe
+let touchStartY = 0;
+window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+window.addEventListener('touchend', e => {
+  if (animating) return;
+  const dy = touchStartY - e.changedTouches[0].clientY;
+  if (Math.abs(dy) > 40) goTo(current + (dy > 0 ? 1 : -1));
+}, { passive: true });
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  if (animating) return;
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowUp'   || e.key === 'PageUp'  ) { e.preventDefault(); goTo(current - 1); }
+});
+
+// Boot: fire slide 0 immediately
+goTo(0);
 
 // Stagger chart cards
 document.querySelectorAll('.chart-card').forEach((card, i) => {

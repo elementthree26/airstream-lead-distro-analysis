@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Airstream · Dealer Lead Distribution · Forecast vs. Actual</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <style>
   :root {
     --navy:      #1C2B3A;
@@ -590,10 +591,15 @@ function goTo(idx) {
 }
 
 function animateSlide(idx) {
-  const slide = slides[idx];
-  slide.querySelectorAll('.kpi-box, .chart-card, .diag-card').forEach(el => {
+  // Reveal cards
+  slides[idx].querySelectorAll('.kpi-box, .chart-card, .diag-card').forEach(el => {
     el.classList.add('vis');
   });
+  // Init charts for this slide on first visit
+  if (CHART_FACTORIES[idx]) {
+    CHART_FACTORIES[idx]();
+    delete CHART_FACTORIES[idx]; // prevent double-init
+  }
 }
 
 // ── Wheel / touch input ───────────────────────────────────────────────────
@@ -666,276 +672,141 @@ const countObs = new IntersectionObserver(entries => {
 }, {threshold: 0.5});
 document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
 
-// ── Charts ────────────────────────────────────────────────────────────────
-
-// Slide 2: Monthly bar
-new Chart(document.getElementById('chartMonthly'), {
-  type: 'bar',
-  data: {
-    labels: DATA.monthly.slice(0,-1).map(d=>d.label),
-    datasets: [{
-      data: DATA.monthly.slice(0,-1).map(d=>d.leads),
-      backgroundColor: DATA.monthly.slice(0,-1).map(d =>
-        d.label === 'Jun 2025' ? GOLD : NAVY
-      ),
-      borderRadius: 4, borderSkipped: false,
-    }]
-  },
-  options: {
-    responsive:true, maintainAspectRatio:false,
-    animation: { duration:1200, easing:'easeOutQuart' },
-    plugins: {
-      legend: { display:false },
-      tooltip: {
-        callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} leads` }
-      },
-      annotation: {
-        annotations: {
-          baseline: {
-            type: 'line', yMin: 19200, yMax: 19200,
-            borderColor: SILVER, borderWidth: 1.5, borderDash: [5,4],
-            label: { content:'Baseline avg ~19,200', display:true, position:'end',
-                     font:{size:10}, color:MID, backgroundColor:'transparent' }
-          }
-        }
-      }
-    },
-    scales: {
-      x: { grid:{display:false}, ticks:{color:MID, font:{size:10}} },
-      y: { grid:{color:'rgba(0,0,0,.05)'}, ticks:{color:MID, font:{size:10},
-           callback: v => v>=1000 ? (v/1000).toFixed(0)+'k' : v} }
-    }
-  }
-});
-
-// Slide 2: Source donut
-new Chart(document.getElementById('chartSource'), {
-  type: 'doughnut',
-  data: {
-    labels: DATA.source.labels,
-    datasets: [{
-      data: DATA.source.baseline_pct,
-      backgroundColor:[GOLD,NAVY,MID,SILVER,'#7F8C8D',SILVER_LT],
-      borderWidth:2, borderColor: WHITE,
-      hoverOffset:8
-    }]
-  },
-  options: {
-    responsive:true, maintainAspectRatio:false,
-    cutout:'62%',
-    animation:{ animateRotate:true, duration:1000 },
-    plugins: {
-      legend: { position:'bottom', labels:{font:{size:9}, color:NAVY, boxWidth:10, padding:6} },
-      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
-    }
-  }
-});
-
-// Slide 2: Score grouped bar
+// ── Lazy chart factories — keyed by slide index ───────────────────────────
+// Each factory is called ONCE when that slide first becomes active.
 const scoreLabels = ['1','2','3','4','5'];
-new Chart(document.getElementById('chartScore'), {
-  type:'bar',
-  data:{
-    labels: scoreLabels.map(s=>'Score '+s),
-    datasets:[
-      { label:'Baseline', data: scoreLabels.map(s=>parseFloat(DATA.scores.baseline[s]||0)),
-        backgroundColor:NAVY, borderRadius:3 },
-      { label:'Post-Launch', data: scoreLabels.map(s=>parseFloat(DATA.scores.post[s]||0)),
-        backgroundColor:GOLD, borderRadius:3 }
-    ]
-  },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    animation:{ duration:900 },
-    plugins:{ legend:{position:'bottom', labels:{font:{size:9},color:NAVY,boxWidth:10}} },
-    scales:{
-      x:{grid:{display:false}, ticks:{color:MID,font:{size:9}}},
-      y:{grid:{color:'rgba(0,0,0,.05)'}, ticks:{color:MID,font:{size:9},
-         callback: v=>v+'%'}}
-    }
-  }
-});
+const scenLabels  = ['Baseline','Form Elim Only','Elim + 50% CB','Elim + 30% CB','Elim+CB+Score2+','Elim+CB+Score3+'];
+const scenVals    = [19200,17891,14715,13444,5208,1263];
+const scenColors  = [NAVY, GOLD, SILVER, MID,'#E67E22',RED];
 
-// Slide 2: Brand stacked bar
-new Chart(document.getElementById('chartBrand'), {
-  type:'bar',
-  data:{
-    labels:['Baseline','Post-Launch'],
-    datasets:[
-      { label:'Travel Trailer', data:[67.9,52.3], backgroundColor:NAVY, borderRadius:4 },
-      { label:'Touring Coach',  data:[32.1,47.7], backgroundColor:GOLD, borderRadius:4 }
-    ]
-  },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    animation:{ duration:900 },
-    plugins:{
-      legend:{position:'bottom', labels:{font:{size:9},color:NAVY,boxWidth:10}},
-      tooltip:{ callbacks:{ label: ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` } }
-    },
-    scales:{
-      x:{stacked:true, grid:{display:false}, ticks:{color:MID,font:{size:9}}},
-      y:{stacked:true, max:110, grid:{color:'rgba(0,0,0,.05)'},
-         ticks:{color:MID,font:{size:9}, callback:v=>v+'%'}}
-    }
-  }
-});
-
-// Slide 3: Scenario horizontal bar
-const scenLabels = ['Baseline','Form Elim Only','Elim + 50% CB','Elim + 30% CB','Elim+CB+Score2+','Elim+CB+Score3+'];
-const scenVals   = [19200,17891,14715,13444,5208,1263];
-const scenColors = [NAVY, GOLD, SILVER, MID,'#E67E22',RED];
-
-new Chart(document.getElementById('chartScenario'), {
-  type:'bar',
-  data:{
-    labels:scenLabels,
-    datasets:[{
-      data:scenVals,
-      backgroundColor:scenColors,
-      borderRadius:4, borderSkipped:false
-    }]
-  },
-  options:{
-    indexAxis:'y',
-    responsive:true, maintainAspectRatio:false,
-    animation:{ duration:1100, easing:'easeOutQuart' },
-    plugins:{
-      legend:{display:false},
-      tooltip:{ callbacks:{label:ctx=>` ${ctx.parsed.x.toLocaleString()} leads/mo`} },
-      annotation:{
-        annotations:{
-          actual:{
-            type:'line', xMin:12026, xMax:12026,
-            borderColor:RED, borderWidth:2, borderDash:[4,3],
-            label:{ content:'Jun 2026: ~12,026', display:true, position:'start',
-                    font:{size:9,weight:'bold'}, color:RED, backgroundColor:'rgba(0,0,0,.6)',
-                    padding:{x:4,y:2} }
-          }
+const CHART_FACTORIES = {
+  1: () => {   // Slide 2
+    new Chart(document.getElementById('chartMonthly'), {
+      type:'bar',
+      data:{
+        labels: DATA.monthly.slice(0,-1).map(d=>d.label),
+        datasets:[{ data: DATA.monthly.slice(0,-1).map(d=>d.leads),
+          backgroundColor: DATA.monthly.slice(0,-1).map(d=> d.label==='Jun 2025'?GOLD:NAVY),
+          borderRadius:4, borderSkipped:false }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        animation:{duration:900, easing:'easeOutQuart'},
+        plugins:{ legend:{display:false},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toLocaleString()} leads`}},
+          annotation:{annotations:{baseline:{
+            type:'line',yMin:19200,yMax:19200,borderColor:SILVER,borderWidth:1.5,borderDash:[5,4],
+            label:{content:'Baseline avg ~19,200',display:true,position:'end',font:{size:10},color:MID,backgroundColor:'transparent'}
+          }}}
+        },
+        scales:{
+          x:{grid:{display:false},ticks:{color:MID,font:{size:10}}},
+          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}
         }
       }
-    },
-    scales:{
-      x:{grid:{color:'rgba(255,255,255,.07)'}, ticks:{color:SILVER,font:{size:9},
-         callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}},
-      y:{grid:{display:false}, ticks:{color:SILVER_LT,font:{size:9}}}
-    }
-  }
-});
-
-// Slide 3: Full timeline
-const tlLabels = DATA.monthly.map(d=>d.label);
-const tlColors = DATA.monthly.map(d=>d.postLaunch ? RED : NAVY);
-const tlData   = DATA.monthly.map(d=>d.leads);
-
-new Chart(document.getElementById('chartTimeline'), {
-  type:'bar',
-  data:{
-    labels:tlLabels,
-    datasets:[
-      { type:'bar', label:'Pre-Launch', data:DATA.monthly.map(d=>d.postLaunch?null:d.leads),
-        backgroundColor:NAVY, borderRadius:4 },
-      { type:'bar', label:'Post-Launch (projected)', data:DATA.monthly.map(d=>d.postLaunch?d.leads:null),
-        backgroundColor:RED, borderRadius:4, borderColor:RED },
-      { type:'line', label:'Forecast ~17,900', data:DATA.monthly.map(()=>17900),
-        borderColor:GOLD, borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false }
-    ]
+    });
+    new Chart(document.getElementById('chartSource'), {
+      type:'doughnut',
+      data:{labels:DATA.source.labels,datasets:[{
+        data:DATA.source.baseline_pct,
+        backgroundColor:[GOLD,NAVY,MID,SILVER,'#7F8C8D',SILVER_LT],
+        borderWidth:2,borderColor:WHITE,hoverOffset:8
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        animation:{animateRotate:true,duration:900},
+        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10,padding:6}},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed.toFixed(1)}%`}}}}
+    });
+    new Chart(document.getElementById('chartScore'), {
+      type:'bar',
+      data:{labels:scoreLabels.map(s=>'Score '+s),datasets:[
+        {label:'Baseline',data:scoreLabels.map(s=>parseFloat(DATA.scores.baseline[s]||0)),backgroundColor:NAVY,borderRadius:3},
+        {label:'Post-Launch',data:scoreLabels.map(s=>parseFloat(DATA.scores.post[s]||0)),backgroundColor:GOLD,borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:900},
+        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
+        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
+          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
+    });
+    new Chart(document.getElementById('chartBrand'), {
+      type:'bar',
+      data:{labels:['Baseline','Post-Launch'],datasets:[
+        {label:'Travel Trailer',data:[67.9,52.3],backgroundColor:NAVY,borderRadius:4},
+        {label:'Touring Coach',data:[32.1,47.7],backgroundColor:GOLD,borderRadius:4}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:900},
+        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}},
+          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`}}},
+        scales:{x:{stacked:true,grid:{display:false},ticks:{color:MID,font:{size:9}}},
+          y:{stacked:true,max:110,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
+    });
   },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    animation:{ duration:1100, easing:'easeOutQuart' },
-    plugins:{
-      legend:{position:'bottom',labels:{color:SILVER_LT,font:{size:9},boxWidth:10,padding:8}},
-      tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()??''}`}}
-    },
-    scales:{
-      x:{grid:{display:false}, ticks:{color:SILVER,font:{size:9}, maxRotation:45}},
-      y:{grid:{color:'rgba(255,255,255,.07)'}, ticks:{color:SILVER,font:{size:9},
-         callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}
-    }
-  }
-});
-
-// Slide 4: Score 3+ rate comparison
-new Chart(document.getElementById('chartS3'), {
-  type:'bar',
-  data:{
-    labels:['Baseline\n8.0% forecast','Post-Launch Actual'],
-    datasets:[{
-      data:[6.3,6.1],
-      backgroundColor:[NAVY, '#27AE60'],
-      borderRadius:6, borderSkipped:false
-    }]
+  2: () => {   // Slide 3
+    new Chart(document.getElementById('chartScenario'), {
+      type:'bar',
+      data:{labels:scenLabels,datasets:[{data:scenVals,backgroundColor:scenColors,borderRadius:4,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:900,easing:'easeOutQuart'},
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x.toLocaleString()} leads/mo`}},
+          annotation:{annotations:{actual:{type:'line',xMin:12026,xMax:12026,
+            borderColor:RED,borderWidth:2,borderDash:[4,3],
+            label:{content:'Jun 2026: ~12,026',display:true,position:'start',
+                   font:{size:9,weight:'bold'},color:RED,backgroundColor:'rgba(0,0,0,.6)',padding:{x:4,y:2}}}}}},
+        scales:{x:{grid:{color:'rgba(255,255,255,.07)'},ticks:{color:SILVER,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}},
+          y:{grid:{display:false},ticks:{color:SILVER_LT,font:{size:9}}}}}
+    });
+    new Chart(document.getElementById('chartTimeline'), {
+      type:'bar',
+      data:{labels:DATA.monthly.map(d=>d.label),datasets:[
+        {type:'bar',label:'Pre-Launch',data:DATA.monthly.map(d=>d.postLaunch?null:d.leads),backgroundColor:NAVY,borderRadius:4},
+        {type:'bar',label:'Post-Launch (projected)',data:DATA.monthly.map(d=>d.postLaunch?d.leads:null),backgroundColor:RED,borderRadius:4},
+        {type:'line',label:'Forecast ~17,900',data:DATA.monthly.map(()=>17900),
+          borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:900,easing:'easeOutQuart'},
+        plugins:{legend:{position:'bottom',labels:{color:SILVER_LT,font:{size:9},boxWidth:10,padding:8}},
+          tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()??''}`}}},
+        scales:{x:{grid:{display:false},ticks:{color:SILVER,font:{size:9},maxRotation:45}},
+          y:{grid:{color:'rgba(255,255,255,.07)'},ticks:{color:SILVER,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+    });
   },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    animation:{duration:900},
-    plugins:{
-      legend:{display:false},
-      annotation:{
-        annotations:{
-          line:{type:'line',yMin:8.0,yMax:8.0,borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],
-            label:{content:'Forecast floor 8.0%',display:true,position:'end',
-                   font:{size:9},color:GOLD,backgroundColor:'transparent'}}
-        }
-      }
-    },
-    scales:{
-      x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
-      y:{grid:{color:'rgba(0,0,0,.05)'},max:12,ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}
-    }
+  3: () => {   // Slide 4
+    new Chart(document.getElementById('chartS3'), {
+      type:'bar',
+      data:{labels:['Baseline','Post-Launch Actual'],datasets:[{
+        data:[6.3,6.1],backgroundColor:[NAVY,'#27AE60'],borderRadius:6,borderSkipped:false
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:900},
+        plugins:{legend:{display:false},
+          annotation:{annotations:{line:{type:'line',yMin:8.0,yMax:8.0,
+            borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],
+            label:{content:'Forecast floor 8.0%',display:true,position:'end',font:{size:9},color:GOLD,backgroundColor:'transparent'}}}}},
+        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
+          y:{grid:{color:'rgba(0,0,0,.05)'},max:12,ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
+    });
+    new Chart(document.getElementById('chartSrcComp'), {
+      type:'bar',
+      data:{labels:['Ext. Paid','Direct','Organic','Email','Paid Srch','Other'],datasets:[
+        {label:'Baseline',data:DATA.source.baseline_pct,backgroundColor:NAVY,borderRadius:3},
+        {label:'Post-Launch',data:DATA.source.post_pct,backgroundColor:GOLD,borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:900},
+        plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
+        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
+          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
+    });
+    new Chart(document.getElementById('chartPerDealer'), {
+      type:'bar',
+      data:{labels:['Baseline','Forecast','Post-Launch\n(Jun rate)'],datasets:[{
+        data:[231,216,145],backgroundColor:[NAVY,GOLD,RED],borderRadius:6,borderSkipped:false
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:900},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} leads/dealer/mo`}}},
+        scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
+          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9}}}}}
+    });
   }
-});
-
-// Slide 4: Source mix grouped
-new Chart(document.getElementById('chartSrcComp'), {
-  type:'bar',
-  data:{
-    labels:['Ext. Paid','Direct','Organic','Email','Paid Srch','Other'],
-    datasets:[
-      {label:'Baseline',data:DATA.source.baseline_pct,backgroundColor:NAVY,borderRadius:3},
-      {label:'Post-Launch',data:DATA.source.post_pct,backgroundColor:GOLD,borderRadius:3}
-    ]
-  },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    animation:{duration:900},
-    plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
-    scales:{
-      x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
-      y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}
-    }
-  }
-});
-
-// Slide 4: Per dealer
-new Chart(document.getElementById('chartPerDealer'), {
-  type:'bar',
-  data:{
-    labels:['Baseline','Forecast','Post-Launch\n(Jun rate)'],
-    datasets:[{
-      data:[231,216,145],
-      backgroundColor:[NAVY, GOLD, RED],
-      borderRadius:6, borderSkipped:false
-    }]
-  },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    animation:{duration:900},
-    plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} leads/dealer/mo`}}},
-    scales:{
-      x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
-      y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9}}}
-    }
-  }
-});
-
-// ── Load Chart.js annotation plugin ──────────────────────────────────────
-// (annotations require the plugin — load it after charts are defined so they
-//  degrade gracefully if the CDN is unavailable)
+};
 </script>
-<!-- Annotation plugin for reference lines -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 </body>
 </html>

@@ -42,7 +42,7 @@
   .nav-dot {
     width: 10px; height: 10px; border-radius: 50%;
     background: rgba(255,255,255,0.25); cursor: pointer;
-    transition: background .3s, transform .3s;
+  
     border: none; outline: none;
   }
   .nav-dot.active { background: var(--gold); transform: scale(1.4); }
@@ -52,7 +52,7 @@
   #progress {
     position: fixed; top: 0; left: 0; height: 3px;
     background: linear-gradient(90deg, var(--gold), var(--gold-lt));
-    width: 0%; z-index: 200; transition: width .2s;
+    width: 0%; z-index: 200;
   }
 
   /* ── Slides ───────────────────────────────────────────────── */
@@ -63,8 +63,8 @@
 
   #slides-track {
     position: absolute; top: 0; left: 0; right: 0;
-    will-change: transform;
-    transition: transform 0.45s ease;
+  
+  
   }
 
   .slide {
@@ -113,9 +113,8 @@
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px; padding: 1.4rem 1rem;
     text-align: center;
-    opacity: 0; transition: opacity .25s;
+    
   }
-  .kpi-box.vis { opacity: 1; }
   .kpi-box.gold-border { border-color: var(--gold); }
   .kpi-box.red-border  { border-color: var(--red); }
   .kpi-val {
@@ -158,9 +157,8 @@
     border-radius: 12px; padding: 1.25rem 1.5rem;
     box-shadow: 0 2px 12px rgba(0,0,0,.06);
     display: flex; flex-direction: column;
-    opacity: 0; transition: opacity .25s;
+    
   }
-  .chart-card.vis { opacity: 1; }
   .chart-card canvas { flex: 1; }
 
   .card-title {
@@ -206,9 +204,8 @@
   }
   .diag-card {
     border-radius: 10px; padding: 1.2rem 1.4rem;
-    opacity: 0; transition: opacity .25s;
+    
   }
-  .diag-card.vis { opacity: 1; }
   .diag-card.warn { background: #FDF0EE; border-left: 4px solid var(--red); }
   .diag-card.ok   { background: #EDF7F1; border-left: 4px solid var(--green); }
   .diag-card.info { background: var(--white); border-left: 4px solid var(--silver); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
@@ -221,13 +218,6 @@
   }
 
   /* ── Animations ───────────────────────────────────────────── */
-  .anim-fade-up, .anim-slide-r { opacity: 0; animation: simpleFade .3s ease forwards; }
-  .delay-1 { animation-delay: .05s; }
-  .delay-2 { animation-delay: .1s; }
-  .delay-3 { animation-delay: .15s; }
-  .delay-4 { animation-delay: .2s; }
-  .delay-5 { animation-delay: .25s; }
-  @keyframes simpleFade { to { opacity: 1; } }
 
   /* ── Scrollbar ────────────────────────────────────────────── */
   ::-webkit-scrollbar { width: 6px; }
@@ -281,35 +271,35 @@
     <span class="slide-counter">01 / 04</span>
   </div>
 
-  <div class="slide-label anim-fade-up delay-1">Dealer Lead Distribution</div>
-  <h1 class="slide-title anim-fade-up delay-2">Forecast vs. Actual<br>Post-Launch Analysis</h1>
-  <div class="divider anim-fade-up delay-2"></div>
-  <p class="slide-subtitle anim-fade-up delay-3">
+  <div class="slide-label">Dealer Lead Distribution</div>
+  <h1 class="slide-title">Forecast vs. Actual<br>Post-Launch Analysis</h1>
+  <div class="divider"></div>
+  <p class="slide-subtitle">
     How did the new Airstream website change dealer lead volume?<br>
     Pre-launch forecast · May 27, 2026 launch · 22 days of post-launch data
   </p>
 
   <div class="kpi-row">
-    <div class="kpi-box gold-border anim-fade-up delay-2">
+    <div class="kpi-box gold-border">
       <span class="kpi-val" data-count="249981" data-format="comma">0</span>
       <div class="kpi-label">Historical Leads<br>(13-mo baseline)</div>
     </div>
-    <div class="kpi-box anim-fade-up delay-3">
+    <div class="kpi-box">
       <span class="kpi-val">~19,200</span>
       <div class="kpi-label">Avg Leads / Month<br>(pre-launch baseline)</div>
     </div>
-    <div class="kpi-box anim-fade-up delay-4">
+    <div class="kpi-box">
       <span class="kpi-val">~17,900</span>
       <div class="kpi-label">Forecasted Monthly<br>Volume (–7%)</div>
     </div>
-    <div class="kpi-box red-border anim-fade-up delay-5">
+    <div class="kpi-box red-border">
       <span class="kpi-val" style="color:var(--red)">~12,026</span>
       <div class="kpi-label">June 2026 Pace<br>(18 days of data)</div>
       <div class="kpi-delta neg">–37% vs. baseline</div>
     </div>
   </div>
 
-  <div class="meta-row anim-fade-up delay-5">
+  <div class="meta-row">
     <div class="meta-item">
       <span class="meta-key">Website Launch</span>
       <span class="meta-val">May 27, 2026</span>
@@ -545,6 +535,7 @@ const NAVY='#1C2B3A', NAVY_MID='#243447', SILVER='#A8B4BC', GOLD='#C09B5E',
       GOLD_LT='#D4AF7A', WHITE='#FFFFFF', BG='#F4F6F7', MID='#5C6E7A',
       RED='#C0392B', GREEN='#27AE60', SILVER_LT='#D6DDE0';
 
+Chart.defaults.animation = false;
 Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
 
 // ── Slide engine ──────────────────────────────────────────────────────────
@@ -553,8 +544,6 @@ const slides     = document.querySelectorAll('.slide');
 const dots       = document.querySelectorAll('.nav-dot');
 const totalSlides = slides.length;
 let current      = 0;
-let animating    = false;
-const ANIM_MS    = 720;
 
 // Track which slides have had their animations fired
 const animated = new Set();
@@ -572,15 +561,10 @@ function goTo(idx) {
     animated.add(idx);
     setTimeout(() => animateSlide(idx), 80);
   }
-  animating = true;
-  setTimeout(() => { animating = false; }, ANIM_MS);
 }
 
 function animateSlide(idx) {
-  // Reveal cards
-  slides[idx].querySelectorAll('.kpi-box, .chart-card, .diag-card').forEach(el => {
-    el.classList.add('vis');
-  });
+
   // Init charts for this slide on first visit
   if (CHART_FACTORIES[idx]) {
     CHART_FACTORIES[idx]();
@@ -595,7 +579,6 @@ const WHEEL_THRESHOLD = 60;
 
 window.addEventListener('wheel', e => {
   e.preventDefault();
-  if (animating) return;
   wheelAccum += e.deltaY;
   clearTimeout(wheelTimer);
   wheelTimer = setTimeout(() => { wheelAccum = 0; }, 120);
@@ -609,14 +592,12 @@ window.addEventListener('wheel', e => {
 let touchStartY = 0;
 window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
 window.addEventListener('touchend', e => {
-  if (animating) return;
   const dy = touchStartY - e.changedTouches[0].clientY;
   if (Math.abs(dy) > 40) goTo(current + (dy > 0 ? 1 : -1));
 }, { passive: true });
 
 // Keyboard
 window.addEventListener('keydown', e => {
-  if (animating) return;
   if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
   if (e.key === 'ArrowUp'   || e.key === 'PageUp'  ) { e.preventDefault(); goTo(current - 1); }
 });
@@ -670,7 +651,7 @@ const CHART_FACTORIES = {
       },
       options:{
         responsive:true, maintainAspectRatio:false,
-        animation:{duration:400, easing:'easeOutQuart'},
+        
         plugins:{ legend:{display:false},
           tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toLocaleString()} leads`}},
           annotation:{annotations:{baseline:{
@@ -692,7 +673,6 @@ const CHART_FACTORIES = {
         borderWidth:2,borderColor:WHITE,hoverOffset:8
       }]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
-        animation:{animateRotate:true,duration:400},
         plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10,padding:6}},
           tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed.toFixed(1)}%`}}}}
     });
@@ -702,7 +682,7 @@ const CHART_FACTORIES = {
         {label:'Baseline',data:scoreLabels.map(s=>parseFloat(DATA.scores.baseline[s]||0)),backgroundColor:NAVY,borderRadius:3},
         {label:'Post-Launch',data:scoreLabels.map(s=>parseFloat(DATA.scores.post[s]||0)),backgroundColor:GOLD,borderRadius:3}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
         scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
           y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
@@ -713,7 +693,7 @@ const CHART_FACTORIES = {
         {label:'Travel Trailer',data:[67.9,52.3],backgroundColor:NAVY,borderRadius:4},
         {label:'Touring Coach',data:[32.1,47.7],backgroundColor:GOLD,borderRadius:4}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}},
           tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`}}},
         scales:{x:{stacked:true,grid:{display:false},ticks:{color:MID,font:{size:9}}},
@@ -724,7 +704,7 @@ const CHART_FACTORIES = {
     new Chart(document.getElementById('chartScenario'), {
       type:'bar',
       data:{labels:scenLabels,datasets:[{data:scenVals,backgroundColor:scenColors,borderRadius:4,borderSkipped:false}]},
-      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:400,easing:'easeOutQuart'},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},
           tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x.toLocaleString()} leads/mo`}},
           annotation:{annotations:{actual:{type:'line',xMin:12026,xMax:12026,
@@ -742,7 +722,7 @@ const CHART_FACTORIES = {
         {type:'line',label:'Forecast ~17,900',data:DATA.monthly.map(()=>17900),
           borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400,easing:'easeOutQuart'},
+      options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{position:'bottom',labels:{color:SILVER_LT,font:{size:9},boxWidth:10,padding:8}},
           tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()??''}`}}},
         scales:{x:{grid:{display:false},ticks:{color:SILVER,font:{size:9},maxRotation:45}},
@@ -755,7 +735,7 @@ const CHART_FACTORIES = {
       data:{labels:['Baseline','Post-Launch Actual'],datasets:[{
         data:[6.3,6.1],backgroundColor:[NAVY,'#27AE60'],borderRadius:6,borderSkipped:false
       }]},
-      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},
           annotation:{annotations:{line:{type:'line',yMin:8.0,yMax:8.0,
             borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],
@@ -769,7 +749,7 @@ const CHART_FACTORIES = {
         {label:'Baseline',data:DATA.source.baseline_pct,backgroundColor:NAVY,borderRadius:3},
         {label:'Post-Launch',data:DATA.source.post_pct,backgroundColor:GOLD,borderRadius:3}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
         scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
           y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}}}
@@ -779,7 +759,7 @@ const CHART_FACTORIES = {
       data:{labels:['Baseline','Forecast','Post-Launch\n(Jun rate)'],datasets:[{
         data:[231,216,145],backgroundColor:[NAVY,GOLD,RED],borderRadius:6,borderSkipped:false
       }]},
-      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} leads/dealer/mo`}}},
         scales:{x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
           y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9}}}}}

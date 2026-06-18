@@ -1,0 +1,133 @@
+{
+  "monthly": [
+    {
+      "label": "Mar 2025",
+      "leads": 18551
+    },
+    {
+      "label": "Apr 2025",
+      "leads": 16178
+    },
+    {
+      "label": "May 2025",
+      "leads": 20272
+    },
+    {
+      "label": "Jun 2025",
+      "leads": 28693
+    },
+    {
+      "label": "Jul 2025",
+      "leads": 23557
+    },
+    {
+      "label": "Aug 2025",
+      "leads": 19161
+    },
+    {
+      "label": "Sep 2025",
+      "leads": 16305
+    },
+    {
+      "label": "Oct 2025",
+      "leads": 13902
+    },
+    {
+      "label": "Nov 2025",
+      "leads": 12106
+    },
+    {
+      "label": "Dec 2025",
+      "leads": 17258
+    },
+    {
+      "label": "Mar 2026",
+      "leads": 15870
+    },
+    {
+      "label": "Apr 2026",
+      "leads": 13948
+    },
+    {
+      "label": "May 2026",
+      "leads": 12524
+    },
+    {
+      "label": "Jun 2026*",
+      "leads": 12026,
+      "postLaunch": true
+    }
+  ],
+  "source": {
+    "labels": [
+      "External Paid (Meta)",
+      "Direct Traffic",
+      "Organic Search",
+      "Email Marketing",
+      "Paid Search",
+      "Other"
+    ],
+    "baseline": [
+      115947,
+      41785,
+      20807,
+      11474,
+      6108,
+      5732
+    ],
+    "post": [
+      7173,
+      513,
+      344,
+      527,
+      119,
+      162
+    ],
+    "baseline_pct": [
+      57.4,
+      20.7,
+      10.3,
+      5.7,
+      3.0,
+      2.8
+    ],
+    "post_pct": [
+      81.2,
+      5.8,
+      3.9,
+      6.0,
+      1.3,
+      1.8
+    ]
+  },
+  "scores": {
+    "baseline": {
+      "1": 81.4,
+      "2": 12.0,
+      "3": 4.9,
+      "4": 1.2,
+      "5": 0.3
+    },
+    "post": {
+      "1": 61.2,
+      "2": 32.7,
+      "3": 2.3,
+      "4": 0.3,
+      "5": 3.5
+    }
+  },
+  "metrics": {
+    "baseline_mo": 19200,
+    "forecast_mo": 17900,
+    "actual_mo": 12026,
+    "baseline_s3": 6.3,
+    "post_s3": 6.1,
+    "b_tt_pct": 67.9,
+    "b_tc_pct": 32.1,
+    "p_tt_pct": 52.3,
+    "p_tc_pct": 47.7,
+    "jun_days": 18,
+    "pct_vs_baseline": -37.4,
+    "pct_vs_forecast": -32.8
+  }
+}

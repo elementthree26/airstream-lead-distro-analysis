@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airstream · Dealer Lead Distribution · Forecast vs. Actual</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy:      #1C2B3A;
+    --navy-mid:  #243447;
+    --navy-lt:   #2E4055;
+    --silver:    #A8B4BC;
+    --silver-lt: #D6DDE0;
+    --gold:      #C09B5E;
+    --gold-lt:   #D4AF7A;
+    --white:     #FFFFFF;
+    --bg:        #F4F6F7;
+    --mid:       #5C6E7A;
+    --red:       #C0392B;
+    --green:     #27AE60;
+    --slide-h:   100vh;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  /* ── Nav dots ─────────────────────────────────────────────── */
+  #nav {
+    position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%);
+    z-index: 100; display: flex; flex-direction: column; gap: 10px;
+  }
+  .nav-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.25); cursor: pointer;
+    transition: background .3s, transform .3s;
+    border: none; outline: none;
+  }
+  .nav-dot.active { background: var(--gold); transform: scale(1.4); }
+  .nav-dot:hover { background: var(--silver); }
+
+  /* ── Progress bar ─────────────────────────────────────────── */
+  #progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+    width: 0%; z-index: 200; transition: width .2s;
+  }
+
+  /* ── Slides ───────────────────────────────────────────────── */
+  .slide {
+    min-height: var(--slide-h);
+    scroll-snap-align: start;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    padding: 3.5rem 4rem 2.5rem;
+  }
+
+  /* ── Slide 1 — Title ──────────────────────────────────────── */
+  #slide-1 {
+    background: var(--navy);
+    justify-content: center;
+  }
+  #slide-1::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background: var(--gold);
+  }
+  #slide-1 .bg-text {
+    position: absolute; right: -2rem; bottom: -1rem;
+    font-size: 22vw; font-weight: 900; color: rgba(255,255,255,0.03);
+    letter-spacing: -0.05em; pointer-events: none; white-space: nowrap;
+    line-height: 1;
+  }
+
+  .slide-label {
+    font-size: .75rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: .75rem; font-weight: 600;
+  }
+  .slide-title {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800; line-height: 1.1;
+    color: var(--white); margin-bottom: .5rem;
+  }
+  .slide-subtitle {
+    font-size: 1.1rem; color: var(--silver); margin-bottom: 2.5rem; font-weight: 400;
+  }
+
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+    margin-top: 2rem;
+  }
+  .kpi-box {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 1.4rem 1rem;
+    text-align: center;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .5s, transform .5s;
+  }
+  .kpi-box.vis { opacity: 1; transform: translateY(0); }
+  .kpi-box.gold-border { border-color: var(--gold); }
+  .kpi-box.red-border  { border-color: var(--red); }
+  .kpi-val {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 800; color: var(--white); display: block;
+  }
+  .kpi-label { font-size: .75rem; color: var(--silver); margin-top: .4rem; line-height: 1.4; }
+  .kpi-delta { font-size: .8rem; font-weight: 700; margin-top: .4rem; }
+  .kpi-delta.neg { color: var(--red); }
+  .kpi-delta.pos { color: var(--green); }
+
+  .meta-row {
+    display: flex; gap: 2.5rem; flex-wrap: wrap; margin-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: .2rem; }
+  .meta-key { font-size: .7rem; color: var(--gold); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+  .meta-val { font-size: .9rem; color: var(--silver-lt); }
+
+  .e3-badge {
+    position: absolute; bottom: 1.5rem; right: 4rem;
+    font-size: .7rem; color: var(--mid); letter-spacing: .08em;
+  }
+
+  /* ── Slide 2 — Baseline ───────────────────────────────────── */
+  #slide-2 { background: var(--bg); color: var(--navy); }
+  #slide-2 .slide-label { color: var(--gold); }
+  #slide-2 .slide-title { color: var(--navy); }
+  #slide-2 .slide-subtitle { color: var(--mid); }
+  #slide-2 .e3-badge { color: var(--silver); }
+
+  .chart-grid {
+    display: grid; gap: 1.5rem; flex: 1;
+  }
+  .chart-grid-1-2 { grid-template-rows: 1.6fr 1fr; }
+  .chart-grid-3col { grid-template-columns: 1fr 1fr 1fr; }
+
+  .chart-card {
+    background: var(--white);
+    border-radius: 12px; padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    display: flex; flex-direction: column;
+    opacity: 0; transform: translateY(16px);
+    transition: opacity .55s, transform .55s;
+  }
+  .chart-card.vis { opacity: 1; transform: translateY(0); }
+  .chart-card canvas { flex: 1; }
+
+  .card-title {
+    font-size: .78rem; font-weight: 700; color: var(--navy);
+    text-transform: uppercase; letter-spacing: .1em; margin-bottom: .75rem;
+  }
+  .card-subtitle { font-size: .7rem; color: var(--mid); margin-top: -.4rem; margin-bottom: .75rem; }
+
+  /* ── Slide 3 — Forecast vs Actual ────────────────────────── */
+  #slide-3 { background: var(--navy); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+  .full-row { grid-column: 1 / -1; }
+
+  .comparison-table {
+    width: 100%; border-collapse: collapse; font-size: .82rem;
+  }
+  .comparison-table th {
+    padding: .55rem .75rem; text-align: left;
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--silver); border-bottom: 1px solid rgba(255,255,255,.12);
+  }
+  .comparison-table th:not(:first-child) { text-align: right; }
+  .comparison-table td {
+    padding: .55rem .75rem; border-bottom: 1px solid rgba(255,255,255,.05);
+    color: var(--silver-lt);
+  }
+  .comparison-table td:not(:first-child) { text-align: right; }
+  .comparison-table td:first-child { color: var(--white); font-weight: 600; }
+  .comparison-table .actual-cell { font-weight: 700; }
+  .comparison-table .actual-cell.neg { color: var(--red); }
+  .comparison-table .actual-cell.pos { color: var(--green); }
+  .comparison-table tr:hover td { background: rgba(255,255,255,.03); }
+
+  /* ── Slide 4 — Quality & Diagnostics ─────────────────────── */
+  #slide-4 { background: var(--bg); color: var(--navy); }
+  #slide-4 .slide-label { color: var(--gold); }
+  #slide-4 .slide-title { color: var(--navy); }
+  #slide-4 .slide-subtitle { color: var(--mid); }
+
+  .diag-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;
+  }
+  .diag-card {
+    border-radius: 10px; padding: 1.2rem 1.4rem;
+    opacity: 0; transform: translateX(-12px);
+    transition: opacity .5s, transform .5s;
+  }
+  .diag-card.vis { opacity: 1; transform: translateX(0); }
+  .diag-card.warn { background: #FDF0EE; border-left: 4px solid var(--red); }
+  .diag-card.ok   { background: #EDF7F1; border-left: 4px solid var(--green); }
+  .diag-card.info { background: var(--white); border-left: 4px solid var(--silver); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  .diag-icon { font-size: 1.1rem; margin-bottom: .4rem; }
+  .diag-head { font-size: .82rem; font-weight: 700; color: var(--navy); margin-bottom: .35rem; }
+  .diag-body { font-size: .75rem; color: var(--mid); line-height: 1.5; }
+
+  .bottom-charts {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; margin-top: 1.25rem;
+  }
+
+  /* ── Animations ───────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideRight {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes countUp { from { opacity: 0; } to { opacity: 1; } }
+
+  .anim-fade-up  { animation: fadeUp .7s ease both; }
+  .anim-slide-r  { animation: slideRight .7s ease both; }
+
+  .delay-1 { animation-delay: .1s; }
+  .delay-2 { animation-delay: .2s; }
+  .delay-3 { animation-delay: .3s; }
+  .delay-4 { animation-delay: .45s; }
+  .delay-5 { animation-delay: .6s; }
+
+  /* ── Scrollbar ────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--mid); border-radius: 3px; }
+
+  /* ── Header bar ───────────────────────────────────────────── */
+  .slide-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.75rem;
+  }
+  .airstream-wordmark {
+    font-size: 1rem; font-weight: 900; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--white);
+  }
+  #slide-2 .airstream-wordmark, #slide-4 .airstream-wordmark { color: var(--navy); }
+  .slide-counter { font-size: .72rem; color: var(--mid); letter-spacing: .1em; }
+
+  .divider {
+    width: 48px; height: 3px; background: var(--gold);
+    margin: .6rem 0 1.25rem; border-radius: 2px;
+  }
+
+  /* dark card variant for slide 3 */
+  .chart-card.dark {
+    background: var(--navy-mid);
+    border: 1px solid rgba(255,255,255,.07);
+    box-shadow: none;
+  }
+  .chart-card.dark .card-title { color: var(--silver-lt); }
+  .chart-card.dark .card-subtitle { color: var(--mid); }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav id="nav">
+  <button class="nav-dot active" onclick="goTo(0)" title="Title"></button>
+  <button class="nav-dot" onclick="goTo(1)" title="Baseline"></button>
+  <button class="nav-dot" onclick="goTo(2)" title="Forecast vs Actual"></button>
+  <button class="nav-dot" onclick="goTo(3)" title="Quality & Diagnostics"></button>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════════ SLIDE 1 -->
+<section class="slide" id="slide-1">
+  <div class="bg-text">AIRSTREAM</div>
+
+  <div class="slide-header">
+    <span class="airstream-wordmark">Airstream</span>
+    <span class="slide-counter">01 / 04</span>
+  </div>
+
+  <div class="slide-label anim-fade-up delay-1">Dealer Lead Distribution</div>
+  <h1 class="slide-title anim-fade-up delay-2">Forecast vs. Actual<br>Post-Launch Analysis</h1>
+  <div class="divider anim-fade-up delay-2"></div>
+  <p class="slide-subtitle anim-fade-up delay-3">
+    How did the new Airstream website change dealer lead volume?<br>
+    Pre-launch forecast · May 27, 2026 launch · 22 days of post-launch data
+  </p>
+
+  <div class="kpi-row">
+    <div class="kpi-box gold-border anim-fade-up delay-2">
+      <span class="kpi-val" data-count="249981" data-format="comma">0</span>
+      <div class="kpi-label">Historical Leads<br>(13-mo baseline)</div>
+    </div>
+    <div class="kpi-box anim-fade-up delay-3">
+      <span class="kpi-val">~19,200</span>
+      <div class="kpi-label">Avg Leads / Month<br>(pre-launch baseline)</div>
+    </div>
+    <div class="kpi-box anim-fade-up delay-4">
+      <span class="kpi-val">~17,900</span>
+      <div class="kpi-label">Forecasted Monthly<br>Volume (–7%)</div>
+    </div>
+    <div class="kpi-box red-border anim-fade-up delay-5">
+      <span class="kpi-val" style="color:var(--red)">~12,026</span>
+      <div class="kpi-label">June 2026 Pace<br>(18 days of data)</div>
+      <div class="kpi-delta neg">–37% vs. baseline</div>
+    </div>
+  </div>
+
+  <div class="meta-row anim-fade-up delay-5">
+    <div class="meta-item">
+      <span class="meta-key">Website Launch</span>
+      <span class="meta-val">May 27, 2026</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Post-Launch Window</span>
+      <span class="meta-val">May 28 – June 18, 2026</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Baseline Window</span>
+      <span class="meta-val">Mar 2025 – Mar 2026</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Dealers</span>
+      <span class="meta-val">83</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Pipeline</span>
+      <span class="meta-val">HubSpot → Make → AIMBase → Dealers</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-key">Prepared by</span>
+      <span class="meta-val">Element Three · June 2026</span>
+    </div>
+  </div>
+
+  <span class="e3-badge">Element Three · Confidential</span>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ SLIDE 2 -->
+<section class="slide" id="slide-2">
+  <div class="slide-header">
+    <span class="airstream-wordmark">Airstream</span>
+    <span class="slide-counter" style="color:var(--mid)">02 / 04</span>
+  </div>
+  <div class="slide-label">Pre-Launch Baseline</div>
+  <h2 class="slide-title">The "Before" Numbers</h2>
+  <div class="divider"></div>
+  <p class="slide-subtitle">Mar 2025 – Mar 2026 · 11 months of AIMBase data · 83 dealers</p>
+
+  <div class="chart-grid chart-grid-1-2" style="flex:1">
+    <!-- Monthly trend -->
+    <div class="chart-card" id="card-monthly">
+      <div class="card-title">Monthly Lead Volume — Pre-Launch</div>
+      <div class="card-subtitle">Seasonality: June peak vs. winter trough</div>
+      <canvas id="chartMonthly" height="110"></canvas>
+    </div>
+    <!-- Bottom row -->
+    <div class="chart-grid-3col" style="display:grid;gap:1.5rem">
+      <div class="chart-card" id="card-source">
+        <div class="card-title">Source Mix</div>
+        <canvas id="chartSource" height="140"></canvas>
+      </div>
+      <div class="chart-card" id="card-score">
+        <div class="card-title">Score Distribution</div>
+        <canvas id="chartScore" height="140"></canvas>
+      </div>
+      <div class="chart-card" id="card-brand">
+        <div class="card-title">Brand Split</div>
+        <canvas id="chartBrand" height="140"></canvas>
+      </div>
+    </div>
+  </div>
+  <span class="e3-badge">AIMBase export · Element Three</span>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ SLIDE 3 -->
+<section class="slide" id="slide-3">
+  <div class="slide-header">
+    <span class="airstream-wordmark">Airstream</span>
+    <span class="slide-counter">03 / 04</span>
+  </div>
+  <div class="slide-label">Forecast vs. Actual</div>
+  <h2 class="slide-title">Where Did June 2026 Land?</h2>
+  <div class="divider"></div>
+  <p class="slide-subtitle" style="color:var(--silver)">
+    Forecasted –7% from form elimination · June 2026 running –37% vs. baseline
+  </p>
+
+  <div class="two-col" style="flex:1">
+    <!-- Scenario matrix -->
+    <div class="chart-card dark" id="card-scenario">
+      <div class="card-title">Forecast Scenario Matrix</div>
+      <div class="card-subtitle">Red line = June 2026 actual pace (~12,026/mo)</div>
+      <canvas id="chartScenario" height="200"></canvas>
+    </div>
+    <!-- Full timeline -->
+    <div class="chart-card dark" id="card-timeline">
+      <div class="card-title">Monthly Volume — Baseline Through Post-Launch</div>
+      <div class="card-subtitle">*June 2026 projected from 18 days of actuals</div>
+      <canvas id="chartTimeline" height="200"></canvas>
+    </div>
+    <!-- Table -->
+    <div class="chart-card dark full-row" id="card-table">
+      <div class="card-title">Forecast vs. Actual — Key Metrics</div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Baseline (Before)</th>
+            <th>Forecast (Expected)</th>
+            <th>Actual — June 2026</th>
+            <th>vs. Forecast</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total leads / mo</td>
+            <td>~19,200</td>
+            <td>~17,900 (–7%)</td>
+            <td class="actual-cell neg">~12,026</td>
+            <td class="actual-cell neg">–33%</td>
+          </tr>
+          <tr>
+            <td>Per dealer / mo</td>
+            <td>231</td>
+            <td>~216</td>
+            <td class="actual-cell neg">~145</td>
+            <td class="actual-cell neg">–33%</td>
+          </tr>
+          <tr>
+            <td>External Paid share</td>
+            <td>~60%</td>
+            <td>~60% (unchanged)</td>
+            <td class="actual-cell neg">81%</td>
+            <td style="color:var(--silver)">↑ Meta dominant</td>
+          </tr>
+          <tr>
+            <td>Score 3+ rate</td>
+            <td>6.3%</td>
+            <td>Flat-to-up (quality thesis)</td>
+            <td class="actual-cell pos">6.1%</td>
+            <td style="color:var(--silver)">Roughly flat</td>
+          </tr>
+          <tr>
+            <td>Travel Trailer share</td>
+            <td>68%</td>
+            <td>~66%</td>
+            <td class="actual-cell neg">52%</td>
+            <td style="color:var(--silver)">↓ TC overrepresented</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <span class="e3-badge">AIMBase export · Element Three</span>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ SLIDE 4 -->
+<section class="slide" id="slide-4">
+  <div class="slide-header">
+    <span class="airstream-wordmark">Airstream</span>
+    <span class="slide-counter" style="color:var(--mid)">04 / 04</span>
+  </div>
+  <div class="slide-label">Quality & Diagnostics</div>
+  <h2 class="slide-title">What to Watch</h2>
+  <div class="divider"></div>
+  <p class="slide-subtitle">
+    Post-launch is only 22 days · Run full 60–90 day window before final conclusions
+  </p>
+
+  <div class="bottom-charts">
+    <div class="chart-card" id="card-s3">
+      <div class="card-title">Score 3+ Rate</div>
+      <canvas id="chartS3" height="130"></canvas>
+    </div>
+    <div class="chart-card" id="card-src-comp">
+      <div class="card-title">Source Mix Shift</div>
+      <canvas id="chartSrcComp" height="130"></canvas>
+    </div>
+    <div class="chart-card" id="card-perdeal">
+      <div class="card-title">Leads / Dealer / Month</div>
+      <canvas id="chartPerDealer" height="130"></canvas>
+    </div>
+  </div>
+
+  <div class="diag-grid">
+    <div class="diag-card warn" id="diag-1">
+      <div class="diag-icon">⚠️</div>
+      <div class="diag-head">Volume below forecast floor</div>
+      <div class="diag-body">June pace (~12,026/mo) is –33% vs. forecast ~17,900. Check: was a brochure checkbox added? Did the consolidated form's field count cut CVR? Did new-site top-of-funnel traffic fall on launch?</div>
+    </div>
+    <div class="diag-card warn" id="diag-2">
+      <div class="diag-icon">⚠️</div>
+      <div class="diag-head">External Paid share surged to 81%</div>
+      <div class="diag-body">Baseline was ~57% Meta. Post-launch jump to 81% means website-captured volume (Direct, Organic, Email) collapsed more than paid. The new site may be converting on-site visitors at a lower rate.</div>
+    </div>
+    <div class="diag-card ok" id="diag-3">
+      <div class="diag-icon">✅</div>
+      <div class="diag-head">Score 3+ rate holding roughly flat</div>
+      <div class="diag-body">Post-launch 6.1% vs. 6.3% baseline — within noise. The "fewer but higher-quality leads" thesis is not yet confirmed, but also not disproved. Watch this metric as volume stabilizes over 60–90 days.</div>
+    </div>
+    <div class="diag-card info" id="diag-4">
+      <div class="diag-icon">📅</div>
+      <div class="diag-head">Seasonality & window size caveat</div>
+      <div class="diag-body">June 2025 was the annual peak at 28,693 leads — comparing June 2026 actuals to the ~19,200 annual average understates the YoY decline. Compare June-to-June once the full month closes and re-run after 90 days.</div>
+    </div>
+  </div>
+
+  <span class="e3-badge" style="color:var(--silver)">Element Three · Confidential</span>
+</section>
+
+<script>
+// ── Data ────────────────────────────────────────────────────────────────────
+const DATA = {
+  monthly: [
+    {label:"Mar 2025",leads:18551},{label:"Apr 2025",leads:16178},{label:"May 2025",leads:20272},
+    {label:"Jun 2025",leads:28693},{label:"Jul 2025",leads:23557},{label:"Aug 2025",leads:19161},
+    {label:"Sep 2025",leads:16305},{label:"Oct 2025",leads:13902},{label:"Nov 2025",leads:12106},
+    {label:"Dec 2025",leads:17258},{label:"Mar 2026",leads:31740},{label:"Apr 2026",leads:27896},
+    {label:"May 2026",leads:25048},{label:"Jun 2026*",leads:12026,postLaunch:true}
+  ],
+  source: {
+    labels:["External Paid (Meta)","Direct Traffic","Organic Search","Email Marketing","Paid Search","Other"],
+    baseline_pct:[57.4,20.7,10.3,5.7,3.0,2.8],
+    post_pct:[81.2,5.8,3.9,6.0,1.3,1.8]
+  },
+  scores: {
+    baseline:{"1":86.5,"2":14.8,"3":5.5,"4":1.5,"5":0.3},
+    post:{"1":82.5,"2":18.2,"3":4.8,"4":1.2,"5":0.1}
+  },
+  metrics:{
+    baseline_mo:19200, forecast_mo:17900, actual_mo:12026,
+    baseline_s3:6.3, post_s3:6.1,
+    b_tt_pct:67.9, b_tc_pct:32.1, p_tt_pct:52.3, p_tc_pct:47.7,
+    pct_vs_baseline:-37.4, pct_vs_forecast:-32.8
+  }
+};
+
+const NAVY='#1C2B3A', NAVY_MID='#243447', SILVER='#A8B4BC', GOLD='#C09B5E',
+      GOLD_LT='#D4AF7A', WHITE='#FFFFFF', BG='#F4F6F7', MID='#5C6E7A',
+      RED='#C0392B', GREEN='#27AE60', SILVER_LT='#D6DDE0';
+
+Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
+
+// ── Intersection Observer to trigger animations ──────────────────────────
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.nav-dot');
+const totalSlides = slides.length;
+
+function updateProgress(idx) {
+  document.getElementById('progress').style.width = ((idx+1)/totalSlides*100)+'%';
+  dots.forEach((d,i) => d.classList.toggle('active', i===idx));
+}
+
+function goTo(idx) {
+  slides[idx].scrollIntoView({behavior:'smooth'});
+}
+
+const slideObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && e.intersectionRatio > 0.4) {
+      const idx = Array.from(slides).indexOf(e.target);
+      updateProgress(idx);
+    }
+  });
+}, {threshold:0.4});
+slides.forEach(s => slideObs.observe(s));
+
+// ── Animate elements on entry ─────────────────────────────────────────────
+const elemObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('vis');
+      elemObs.unobserve(e.target);
+    }
+  });
+}, {threshold: 0.15});
+
+document.querySelectorAll('.kpi-box,.chart-card,.diag-card').forEach(el => elemObs.observe(el));
+
+// Stagger chart cards
+document.querySelectorAll('.chart-card').forEach((card, i) => {
+  card.style.transitionDelay = (i * 0.08) + 's';
+});
+document.querySelectorAll('.diag-card').forEach((card, i) => {
+  card.style.transitionDelay = (i * 0.1) + 's';
+});
+
+// ── Count-up animation ────────────────────────────────────────────────────
+function animateCount(el) {
+  const target = parseInt(el.dataset.count);
+  const fmt = el.dataset.format;
+  const dur = 1200;
+  const start = performance.now();
+  function step(now) {
+    const pct = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - pct, 3);
+    const val = Math.round(ease * target);
+    el.textContent = fmt === 'comma' ? val.toLocaleString() : val;
+    if (pct < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+const countObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      animateCount(e.target);
+      countObs.unobserve(e.target);
+    }
+  });
+}, {threshold: 0.5});
+document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
+
+// ── Charts ────────────────────────────────────────────────────────────────
+
+// Slide 2: Monthly bar
+new Chart(document.getElementById('chartMonthly'), {
+  type: 'bar',
+  data: {
+    labels: DATA.monthly.slice(0,-1).map(d=>d.label),
+    datasets: [{
+      data: DATA.monthly.slice(0,-1).map(d=>d.leads),
+      backgroundColor: DATA.monthly.slice(0,-1).map(d =>
+        d.label === 'Jun 2025' ? GOLD : NAVY
+      ),
+      borderRadius: 4, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    animation: { duration:1200, easing:'easeOutQuart' },
+    plugins: {
+      legend: { display:false },
+      tooltip: {
+        callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} leads` }
+      },
+      annotation: {
+        annotations: {
+          baseline: {
+            type: 'line', yMin: 19200, yMax: 19200,
+            borderColor: SILVER, borderWidth: 1.5, borderDash: [5,4],
+            label: { content:'Baseline avg ~19,200', display:true, position:'end',
+                     font:{size:10}, color:MID, backgroundColor:'transparent' }
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid:{display:false}, ticks:{color:MID, font:{size:10}} },
+      y: { grid:{color:'rgba(0,0,0,.05)'}, ticks:{color:MID, font:{size:10},
+           callback: v => v>=1000 ? (v/1000).toFixed(0)+'k' : v} }
+    }
+  }
+});
+
+// Slide 2: Source donut
+new Chart(document.getElementById('chartSource'), {
+  type: 'doughnut',
+  data: {
+    labels: DATA.source.labels,
+    datasets: [{
+      data: DATA.source.baseline_pct,
+      backgroundColor:[GOLD,NAVY,MID,SILVER,'#7F8C8D',SILVER_LT],
+      borderWidth:2, borderColor: WHITE,
+      hoverOffset:8
+    }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    cutout:'62%',
+    animation:{ animateRotate:true, duration:1000 },
+    plugins: {
+      legend: { position:'bottom', labels:{font:{size:9}, color:NAVY, boxWidth:10, padding:6} },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%` } }
+    }
+  }
+});
+
+// Slide 2: Score grouped bar
+const scoreLabels = ['1','2','3','4','5'];
+new Chart(document.getElementById('chartScore'), {
+  type:'bar',
+  data:{
+    labels: scoreLabels.map(s=>'Score '+s),
+    datasets:[
+      { label:'Baseline', data: scoreLabels.map(s=>parseFloat(DATA.scores.baseline[s]||0)),
+        backgroundColor:NAVY, borderRadius:3 },
+      { label:'Post-Launch', data: scoreLabels.map(s=>parseFloat(DATA.scores.post[s]||0)),
+        backgroundColor:GOLD, borderRadius:3 }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    animation:{ duration:900 },
+    plugins:{ legend:{position:'bottom', labels:{font:{size:9},color:NAVY,boxWidth:10}} },
+    scales:{
+      x:{grid:{display:false}, ticks:{color:MID,font:{size:9}}},
+      y:{grid:{color:'rgba(0,0,0,.05)'}, ticks:{color:MID,font:{size:9},
+         callback: v=>v+'%'}}
+    }
+  }
+});
+
+// Slide 2: Brand stacked bar
+new Chart(document.getElementById('chartBrand'), {
+  type:'bar',
+  data:{
+    labels:['Baseline','Post-Launch'],
+    datasets:[
+      { label:'Travel Trailer', data:[67.9,52.3], backgroundColor:NAVY, borderRadius:4 },
+      { label:'Touring Coach',  data:[32.1,47.7], backgroundColor:GOLD, borderRadius:4 }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    animation:{ duration:900 },
+    plugins:{
+      legend:{position:'bottom', labels:{font:{size:9},color:NAVY,boxWidth:10}},
+      tooltip:{ callbacks:{ label: ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` } }
+    },
+    scales:{
+      x:{stacked:true, grid:{display:false}, ticks:{color:MID,font:{size:9}}},
+      y:{stacked:true, max:110, grid:{color:'rgba(0,0,0,.05)'},
+         ticks:{color:MID,font:{size:9}, callback:v=>v+'%'}}
+    }
+  }
+});
+
+// Slide 3: Scenario horizontal bar
+const scenLabels = ['Baseline','Form Elim Only','Elim + 50% CB','Elim + 30% CB','Elim+CB+Score2+','Elim+CB+Score3+'];
+const scenVals   = [19200,17891,14715,13444,5208,1263];
+const scenColors = [NAVY, GOLD, SILVER, MID,'#E67E22',RED];
+
+new Chart(document.getElementById('chartScenario'), {
+  type:'bar',
+  data:{
+    labels:scenLabels,
+    datasets:[{
+      data:scenVals,
+      backgroundColor:scenColors,
+      borderRadius:4, borderSkipped:false
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true, maintainAspectRatio:false,
+    animation:{ duration:1100, easing:'easeOutQuart' },
+    plugins:{
+      legend:{display:false},
+      tooltip:{ callbacks:{label:ctx=>` ${ctx.parsed.x.toLocaleString()} leads/mo`} },
+      annotation:{
+        annotations:{
+          actual:{
+            type:'line', xMin:12026, xMax:12026,
+            borderColor:RED, borderWidth:2, borderDash:[4,3],
+            label:{ content:'Jun 2026: ~12,026', display:true, position:'start',
+                    font:{size:9,weight:'bold'}, color:RED, backgroundColor:'rgba(0,0,0,.6)',
+                    padding:{x:4,y:2} }
+          }
+        }
+      }
+    },
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,.07)'}, ticks:{color:SILVER,font:{size:9},
+         callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}},
+      y:{grid:{display:false}, ticks:{color:SILVER_LT,font:{size:9}}}
+    }
+  }
+});
+
+// Slide 3: Full timeline
+const tlLabels = DATA.monthly.map(d=>d.label);
+const tlColors = DATA.monthly.map(d=>d.postLaunch ? RED : NAVY);
+const tlData   = DATA.monthly.map(d=>d.leads);
+
+new Chart(document.getElementById('chartTimeline'), {
+  type:'bar',
+  data:{
+    labels:tlLabels,
+    datasets:[
+      { type:'bar', label:'Pre-Launch', data:DATA.monthly.map(d=>d.postLaunch?null:d.leads),
+        backgroundColor:NAVY, borderRadius:4 },
+      { type:'bar', label:'Post-Launch (projected)', data:DATA.monthly.map(d=>d.postLaunch?d.leads:null),
+        backgroundColor:RED, borderRadius:4, borderColor:RED },
+      { type:'line', label:'Forecast ~17,900', data:DATA.monthly.map(()=>17900),
+        borderColor:GOLD, borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    animation:{ duration:1100, easing:'easeOutQuart' },
+    plugins:{
+      legend:{position:'bottom',labels:{color:SILVER_LT,font:{size:9},boxWidth:10,padding:8}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString()??''}`}}
+    },
+    scales:{
+      x:{grid:{display:false}, ticks:{color:SILVER,font:{size:9}, maxRotation:45}},
+      y:{grid:{color:'rgba(255,255,255,.07)'}, ticks:{color:SILVER,font:{size:9},
+         callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}
+    }
+  }
+});
+
+// Slide 4: Score 3+ rate comparison
+new Chart(document.getElementById('chartS3'), {
+  type:'bar',
+  data:{
+    labels:['Baseline\n8.0% forecast','Post-Launch Actual'],
+    datasets:[{
+      data:[6.3,6.1],
+      backgroundColor:[NAVY, '#27AE60'],
+      borderRadius:6, borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    animation:{duration:900},
+    plugins:{
+      legend:{display:false},
+      annotation:{
+        annotations:{
+          line:{type:'line',yMin:8.0,yMax:8.0,borderColor:GOLD,borderWidth:1.5,borderDash:[5,4],
+            label:{content:'Forecast floor 8.0%',display:true,position:'end',
+                   font:{size:9},color:GOLD,backgroundColor:'transparent'}}
+        }
+      }
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
+      y:{grid:{color:'rgba(0,0,0,.05)'},max:12,ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}
+    }
+  }
+});
+
+// Slide 4: Source mix grouped
+new Chart(document.getElementById('chartSrcComp'), {
+  type:'bar',
+  data:{
+    labels:['Ext. Paid','Direct','Organic','Email','Paid Srch','Other'],
+    datasets:[
+      {label:'Baseline',data:DATA.source.baseline_pct,backgroundColor:NAVY,borderRadius:3},
+      {label:'Post-Launch',data:DATA.source.post_pct,backgroundColor:GOLD,borderRadius:3}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    animation:{duration:900},
+    plugins:{legend:{position:'bottom',labels:{font:{size:9},color:NAVY,boxWidth:10}}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
+      y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9},callback:v=>v+'%'}}
+    }
+  }
+});
+
+// Slide 4: Per dealer
+new Chart(document.getElementById('chartPerDealer'), {
+  type:'bar',
+  data:{
+    labels:['Baseline','Forecast','Post-Launch\n(Jun rate)'],
+    datasets:[{
+      data:[231,216,145],
+      backgroundColor:[NAVY, GOLD, RED],
+      borderRadius:6, borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    animation:{duration:900},
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} leads/dealer/mo`}}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:MID,font:{size:9}}},
+      y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:MID,font:{size:9}}}
+    }
+  }
+});
+
+// ── Load Chart.js annotation plugin ──────────────────────────────────────
+// (annotations require the plugin — load it after charts are defined so they
+//  degrade gracefully if the CDN is unavailable)
+</script>
+<!-- Annotation plugin for reference lines -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+</body>
+</html>
